@@ -1,8 +1,0 @@
-{
-  "dowód_osobisty": "123456789",
-  "name": "Kevin",
-  "surname": "Mercado",
-  "numer_telefonu": "3001234567",
-  "email": "kevin@gmail.com",
-  "password": "Admin123"
-}
