@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const createCodeSchema = z.object({
-  dowód_osobisty: z.number({
-    message: 'dowód_osobisty must be a number',
-  }),
+  dowód_osobisty: z
+    .string({ message: 'dowód_osobisty must be a string' })
+    .min(3, 'dowód_osobisty must have more than 3 characters'),
 
   name: z
     .string({ message: 'name must be a string' })
@@ -19,6 +19,9 @@ export const createCodeSchema = z.object({
 
   email: z
     .string({ message: 'email must be a string' })
-    .email('invalid email format')
-    .min(3, 'email must have more than 3 characters'),
+    .email('invalid email format'),
+
+  password: z
+    .string({ message: 'password must be a string' })
+    .min(8, 'password must have at least 8 characters'),
 });

@@ -2,8 +2,8 @@ import { DataTypes, Model } from 'sequelize';
 import db from '../config/db.js';
 
 class Coder extends Model {
-  declare id: number;
-  declare dowód_osobisty: number;
+  declare id: string;
+  declare dowód_osobisty: string;
   declare name: string;
   declare surname: string;
   declare numer_telefonu: string;
@@ -14,12 +14,13 @@ class Coder extends Model {
 Coder.init(
   {
     id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+
     dowód_osobisty: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     name: {
@@ -41,8 +42,7 @@ Coder.init(
       unique: true,
     },
     password: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.STRING,
       allowNull: false,
     },
   },
@@ -50,7 +50,7 @@ Coder.init(
     sequelize: db,
     modelName: 'Coder',
     tableName: 'coders',
-  }
+  },
 );
 
 export default Coder;
