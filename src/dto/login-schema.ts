@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const loginCoderSchema = z.object({
+export const loginSchema = z.object({
   email: z
     .string({ message: 'email must be a string' })
     .email('invalid email format'),

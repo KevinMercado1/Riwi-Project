@@ -1,35 +1,24 @@
 import { DataTypes, Model } from 'sequelize';
 import db from '../config/db.js';
 
-class Coder extends Model {
+class TeamLeader extends Model {
   declare id: string;
-  declare identificationId: string;
   declare name: string;
   declare surname: string;
   declare numer_telefonu: string;
   declare email: string;
   declare password: string;
   declare roleId: string;
-  declare addressId: string;
-  declare clanId: string;
   declare routeRiwiId: string;
+  declare clanId: string;
 }
 
-Coder.init(
+TeamLeader.init(
   {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
-    },
-
-    identificationId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'identifications',
-        key: 'id',
-      },
     },
 
     name: {
@@ -67,24 +56,6 @@ Coder.init(
       },
     },
 
-    addressId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'addresses',
-        key: 'id',
-      },
-    },
-
-    clanId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'clans',
-        key: 'id',
-      },
-    },
-
     routeRiwiId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -93,12 +64,22 @@ Coder.init(
         key: 'id',
       },
     },
+
+    clanId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      unique: true,
+      references: {
+        model: 'clans',
+        key: 'id',
+      },
+    },
   },
   {
     sequelize: db,
-    modelName: 'Coder',
-    tableName: 'coders',
+    modelName: 'TeamLeader',
+    tableName: 'team_leaders',
   }
 );
 
-export default Coder;
+export default TeamLeader;
