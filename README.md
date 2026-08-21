@@ -28,10 +28,6 @@ Below is the directory breakdown of the `src` folder, illustrating how responsib
 
 The data layer models the academic ecosystem of Riwi. Entities are written as individual classes with strong TypeScript definitions. Their relationships, foreign keys, and cascading behaviors are centralized and instantiated inside `src/models/associations.ts`.
 
-### Entity-Relationship Diagram (ERD)
-
-![Database Schema](./docs/database-schema.png)
-
 ### Entity-Relationship Diagram (ERD) Mapping
 
 The following table details how the architectural schemas map to database tables, including data types and structural constraints:
