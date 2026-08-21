@@ -1,38 +1,115 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import Coder from '../models/coder.js';
+import City from '../models/city.js';
+import Address from '../models/address.js';
+import Identification from '../models/Identification.js';
+import Role from '../models/role.js';
+import Clan from '../models/clan.js';
+import RouteRiwi from '../models/routeRiwi.js';
 
 export const registerCoder = async (req: Request, res: Response) => {
   try {
     const {
-      identificationId,
       name,
       surname,
       numer_telefonu,
       email,
       password,
-      addressId,
-      roleId,
-      clanId,
-      routeRiwiId,
+      identificationType,
+      identificationNumber,
+      address,
+      cityName,
+      role,
+      clan,
+      routeRiwi,
     } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        message: 'Password is required',
+      });
+    }
+
+    const [city] = await City.findOrCreate({
+      where: { name: cityName },
+      defaults: {
+        name: cityName,
+      },
+    });
+
+    const [roleRecord] = await Role.findOrCreate({
+      where: { name: role },
+      defaults: {
+        name: role,
+      },
+    });
+
+    const [clanRecord] = await Clan.findOrCreate({
+      where: { name: clan },
+      defaults: {
+        name: clan,
+      },
+    });
+
+    const [routeRecord] = await RouteRiwi.findOrCreate({
+      where: { name: routeRiwi },
+      defaults: {
+        name: routeRiwi,
+      },
+    });
+
+    const existingCoderByEmail = await Coder.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (existingCoderByEmail) {
+      return res.status(409).json({
+        message: 'A Coder with this email already exists',
+      });
+    }
+
+    const existingIdentification = await Identification.findOne({
+      where: {
+        number: identificationNumber,
+      },
+    });
+
+    if (existingIdentification) {
+      return res.status(409).json({
+        message: 'A Coder with this identification already exists',
+      });
+    }
+
+    const identification = await Identification.create({
+      type: identificationType,
+      number: identificationNumber,
+    });
+
+    const newAddress = await Address.create({
+      address,
+      cityId: city.id,
+    });
 
     const passwordHash = await bcrypt.hash(password, 10);
 
     const coder = await Coder.create({
-      identificationId,
+      identificationId: identification.id,
       name,
       surname,
       numer_telefonu,
       email,
       password: passwordHash,
-      addressId,
-      roleId,
-      clanId,
-      routeRiwiId,
+      addressId: newAddress.id,
+      roleId: roleRecord.id,
+      clanId: clanRecord.id,
+      routeRiwiId: routeRecord.id,
     });
 
     const coderResponse = coder.toJSON();
+
     delete coderResponse.password;
 
     return res.status(201).json({
@@ -40,7 +117,7 @@ export const registerCoder = async (req: Request, res: Response) => {
       coder: coderResponse,
     });
   } catch (error) {
-    console.error('Error creating coder:', error);
+    console.error('Error creating Coder:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -58,7 +135,7 @@ export const getCoders = async (req: Request, res: Response) => {
 
     return res.status(200).json(coders);
   } catch (error) {
-    console.error('Error getting coders:', error);
+    console.error('Error getting Coders:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -106,6 +183,7 @@ export const updateCoder = async (
     });
 
     const coderResponse = coder.toJSON();
+
     delete coderResponse.password;
 
     return res.status(200).json({
@@ -113,7 +191,7 @@ export const updateCoder = async (
       coder: coderResponse,
     });
   } catch (error) {
-    console.error('Error updating coder:', error);
+    console.error('Error updating Coder:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -142,7 +220,7 @@ export const deleteCoder = async (
       message: 'Coder deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting coder:', error);
+    console.error('Error deleting Coder:', error);
 
     return res.status(500).json({
       message: 'Internal server error',

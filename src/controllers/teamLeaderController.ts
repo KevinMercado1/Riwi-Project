@@ -1,6 +1,9 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import TeamLeader from '../models/teamLeader.js';
+import Role from '../models/role.js';
+import Clan from '../models/clan.js';
+import RouteRiwi from '../models/routeRiwi.js';
 
 export const registerTeamLeader = async (req: Request, res: Response) => {
   try {
@@ -10,33 +13,102 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       numer_telefonu,
       email,
       password,
-      roleId,
-      routeRiwiId,
-      clanId,
+      role,
+      clan,
+      routeRiwi,
     } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        message: 'Password is required',
+      });
+    }
+
+  
+    const [roleRecord] = await Role.findOrCreate({
+      where: { name: role },
+      defaults: {
+        name: role,
+      },
+    });
+
+  
+    const [clanRecord] = await Clan.findOrCreate({
+      where: { name: clan },
+      defaults: {
+        name: clan,
+      },
+    });
+
+  
+    const [routeRecord] = await RouteRiwi.findOrCreate({
+      where: { name: routeRiwi },
+      defaults: {
+        name: routeRiwi,
+      },
+    });
+
+
+    const existingTeamLeaderByRoute = await TeamLeader.findOne({
+      where: {
+        routeRiwiId: routeRecord.id,
+      },
+    });
+
+    if (existingTeamLeaderByRoute) {
+      return res.status(409).json({
+        message: `There is already a Team Leader assigned to the ${routeRiwi} route`,
+      });
+    }
+
+    const existingTeamLeaderByClan = await TeamLeader.findOne({
+      where: {
+        clanId: clanRecord.id,
+      },
+    });
+
+    if (existingTeamLeaderByClan) {
+      return res.status(409).json({
+        message: `There is already a Team Leader assigned to the ${clan} clan`,
+      });
+    }
+
+
+    const existingTeamLeaderByEmail = await TeamLeader.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (existingTeamLeaderByEmail) {
+      return res.status(409).json({
+        message: 'A Team Leader with this email already exists',
+      });
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const Teamleader = await TeamLeader.create({
+
+    const teamLeader = await TeamLeader.create({
       name,
       surname,
       numer_telefonu,
       email,
       password: passwordHash,
-      roleId,
-      routeRiwiId,
-      clanId,
+      roleId: roleRecord.id,
+      clanId: clanRecord.id,
+      routeRiwiId: routeRecord.id,
     });
 
-    const TeamleaderResponse = Teamleader.toJSON();
-    delete TeamleaderResponse.password;
+    const teamLeaderResponse = teamLeader.toJSON();
+    delete teamLeaderResponse.password;
 
     return res.status(201).json({
-      msg: 'Teamleader created successfully',
-      Teamleader: TeamleaderResponse,
+      msg: 'Team Leader created successfully',
+      teamLeader: teamLeaderResponse,
     });
   } catch (error) {
-    console.error('Error creating coder:', error);
+    console.error('Error creating Team Leader:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -44,4 +116,100 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
   }
 };
 
-export const getTeamLeaders = 
+export const getTeamLeaders = async (req: Request, res: Response) => {
+  try {
+    const teamLeaders = await TeamLeader.findAll({
+      attributes: {
+        exclude: ['password'],
+      },
+    });
+
+    return res.status(200).json(teamLeaders);
+  } catch (error) {
+    console.error('Error getting TeamLeaders:', error);
+
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const updateTeamLeader = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+
+    const teamLeader = await TeamLeader.findByPk(id);
+
+    if (!teamLeader) {
+      return res.status(404).json({
+        message: "TeamLeader doesn't exist",
+      });
+    }
+
+    const {
+      name,
+      surname,
+      numer_telefonu,
+      email,
+      roleId,
+      routeRiwiId,
+      clanId,
+    } = req.body;
+
+    await teamLeader.update({
+      name,
+      surname,
+      numer_telefonu,
+      email,
+      roleId,
+      routeRiwiId,
+      clanId,
+    });
+
+    const teamLeaderResponse = teamLeader.toJSON();
+    delete teamLeaderResponse.password;
+
+    return res.status(200).json({
+      msg: 'TeamLeader updated successfully',
+      teamLeader: teamLeaderResponse,
+    });
+  } catch (error) {
+    console.error('Error updating TeamLeader:', error);
+
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const deleteTeamLeader = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+
+    const teamLeader = await TeamLeader.findByPk(id);
+
+    if (!teamLeader) {
+      return res.status(404).json({
+        message: "TeamLeader doesn't exist",
+      });
+    }
+
+    await teamLeader.destroy();
+
+    return res.status(200).json({
+      message: 'TeamLeader deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting TeamLeader:', error);
+
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
