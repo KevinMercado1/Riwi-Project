@@ -2,7 +2,7 @@ import express from 'express';
 import 'dotenv/config';
 import db from './config/db.js';
 import routerCoder from './routes/Coder.js';
-import routerteamLeader from './routes/TeamLeader.js';
+import routerTeamLeader from './routes/TeamLeader.js';
 import authRoute from './routes/authRoutes.js';
 import './models/associations.js';
 
@@ -13,8 +13,9 @@ const app = express();
 app.use(express.json());
 
 app.use('/coder', routerCoder);
-app.use('/teamleader', routerteamLeader);
+app.use('/teamleader', routerTeamLeader);
 app.use('/auth', authRoute);
+
 start();
 
 async function start() {

@@ -8,17 +8,20 @@ import TeamLeader from './teamLeader.js';
 import RouteRiwi from './routeRiwi.js';
 
 // ====================
-// CODER
+// CITY - ADDRESS
 // ====================
 
-// Coder - City
-Coder.belongsTo(City, {
+City.hasMany(Address, {
   foreignKey: 'cityId',
 });
 
-City.hasMany(Coder, {
+Address.belongsTo(City, {
   foreignKey: 'cityId',
 });
+
+// ====================
+// CODER
+// ====================
 
 // Coder - Identification
 Coder.belongsTo(Identification, {

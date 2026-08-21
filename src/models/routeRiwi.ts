@@ -17,7 +17,6 @@ RouteRiwi.init(
     name: {
       type: DataTypes.ENUM('basic', 'advanced'),
       allowNull: false,
-      unique: true,
     },
   },
   {

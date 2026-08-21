@@ -1,19 +1,25 @@
-import express, { type Request, type Response } from 'express';
-import bcrypt from 'bcrypt';
-import TeamLeader from '../models/teamLeader.js';
-import { validateRequest } from '../middlewares/validateRequests.js';
-import { createTeamLeaderSchema } from '../dto/create-tlschema.js';
-
-import { loginSchema } from '../dto/login-schema.js';
+import express from 'express';
+// import {
+//   registerTeamLeader,
+//   getTeamLeaders,
+//   updateTeamLeader,
+//   deleteTeamLeader,
+// } from '../controllers/teamLeaderController.js';
+// import { validateRequest } from '../middlewares/validateRequests.js';
+// import { createTeamLeaderSchema } from '../dto/create-tlschema.js';
 
 const router = express.Router();
 
-router.post(
-  '/register',
-  validateRequest(createTeamLeaderSchema),
-  async (req: Request, res: Response) => {
-    const { name, surname, numer_telefonu, email, password, rol } = req.body;
-  }
-);
+// router.post(
+//   '/register',
+//   validateRequest(createTeamLeaderSchema),
+//   registerTeamLeader
+// );
+
+// router.get('/', getTeamLeaders);
+
+// router.put('/:id', updateTeamLeader);
+
+// router.delete('/:id', deleteTeamLeader);
 
 export default router;

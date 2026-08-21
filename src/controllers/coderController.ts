@@ -40,16 +40,7 @@ export const registerCoder = async (req: Request, res: Response) => {
       coder: coderResponse,
     });
   } catch (error) {
-    console.log(error);
-
-    if (
-      error instanceof Error &&
-      error.name === 'SequelizeUniqueConstraintError'
-    ) {
-      return res.status(409).json({
-        message: 'Email already registered',
-      });
-    }
+    console.error('Error creating coder:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -65,9 +56,9 @@ export const getCoders = async (req: Request, res: Response) => {
       },
     });
 
-    return res.json(coders);
+    return res.status(200).json(coders);
   } catch (error) {
-    console.log(error);
+    console.error('Error getting coders:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -80,6 +71,16 @@ export const updateCoder = async (
   res: Response
 ) => {
   try {
+    const { id } = req.params;
+
+    const coder = await Coder.findByPk(id);
+
+    if (!coder) {
+      return res.status(404).json({
+        message: "Coder doesn't exist",
+      });
+    }
+
     const {
       identificationId,
       name,
@@ -92,17 +93,7 @@ export const updateCoder = async (
       routeRiwiId,
     } = req.body;
 
-    const { id } = req.params;
-
-    const coderExists = await Coder.findByPk(id);
-
-    if (!coderExists) {
-      return res.status(404).json({
-        message: "Coder doesn't exist",
-      });
-    }
-
-    await coderExists.update({
+    await coder.update({
       identificationId,
       name,
       surname,
@@ -114,24 +105,15 @@ export const updateCoder = async (
       routeRiwiId,
     });
 
-    const coderResponse = coderExists.toJSON();
+    const coderResponse = coder.toJSON();
     delete coderResponse.password;
 
-    return res.json({
+    return res.status(200).json({
       msg: 'Coder updated successfully',
       coder: coderResponse,
     });
   } catch (error) {
-    console.log(error);
-
-    if (
-      error instanceof Error &&
-      error.name === 'SequelizeUniqueConstraintError'
-    ) {
-      return res.status(409).json({
-        message: 'Email already registered',
-      });
-    }
+    console.error('Error updating coder:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -146,21 +128,21 @@ export const deleteCoder = async (
   try {
     const { id } = req.params;
 
-    const coderExists = await Coder.findByPk(id);
+    const coder = await Coder.findByPk(id);
 
-    if (!coderExists) {
+    if (!coder) {
       return res.status(404).json({
         message: "Coder doesn't exist",
       });
     }
 
-    await coderExists.destroy();
+    await coder.destroy();
 
-    return res.json({
+    return res.status(200).json({
       message: 'Coder deleted successfully',
     });
   } catch (error) {
-    console.log(error);
+    console.error('Error deleting coder:', error);
 
     return res.status(500).json({
       message: 'Internal server error',

@@ -51,6 +51,9 @@ Coder.init(
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
+      validate: {
+        isEmail: true,
+      },
     },
 
     password: {
@@ -98,6 +101,7 @@ Coder.init(
     sequelize: db,
     modelName: 'Coder',
     tableName: 'coders',
+    timestamps: true,
   }
 );
 
