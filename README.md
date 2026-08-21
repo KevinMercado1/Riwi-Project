@@ -28,27 +28,11 @@ Below is the directory breakdown of the `src` folder, illustrating how responsib
 
 The data layer models the academic ecosystem of Riwi. Entities are written as individual classes with strong TypeScript definitions. Their relationships, foreign keys, and cascading behaviors are centralized and instantiated inside `src/models/associations.ts`.
 
-### Entity-Relationship Diagram (ERD) Mapping
-
-The following table details how the architectural schemas map to database tables, including data types and structural constraints:
-
-| Entity Model         | Database Table    | Primary Key | Key Attributes                                           | Foreign Keys (Relations)                                                                                                                                                                                                          |
-| :------------------- | :---------------- | :---------- | :------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`Identification`** | `identifications` | `id` (Int)  | `type`, `number`                                         | None                                                                                                                                                                                                                              |
-| **`City`**           | `cities`          | `id` (Int)  | `name`                                                   | None                                                                                                                                                                                                                              |
-| **`Role`**           | `roles`           | `id` (Int)  | `name`                                                   | None                                                                                                                                                                                                                              |
-| **`Clan`**           | `clans`           | `id` (Int)  | `name`                                                   | None                                                                                                                                                                                                                              |
-| **`RouteRiwi`**      | `routes_riwi`     | `id` (Int)  | `name`                                                   | None                                                                                                                                                                                                                              |
-| **`Address`**        | `addresses`       | `id` (Int)  | `address`                                                | `cityId` $\rightarrow$ `City(id)`                                                                                                                                                                                                 |
-| **`Coder`**          | `coders`          | `id` (Int)  | `name`, `surname`, `email`, `password`, `numer_telefonu` | `identificationId` $\rightarrow$ `Identification(id)` <br> `addressId` $\rightarrow$ `Address(id)` <br> `roleId` $\rightarrow$ `Role(id)` <br> `clanId` $\rightarrow$ `Clan(id)` <br> `routeRiwild` $\rightarrow$ `RouteRiwi(id)` |
-| **`TeamLeader`**     | `team_leaders`    | `id` (Int)  | `name`, `surname`, `email`, `password`, `numer_telefonu` | `roleId` $\rightarrow$ `Role(id)` <br> `clanId` $\rightarrow$ `Clan(id)` <br> `routeRiwild` $\rightarrow$ `RouteRiwi(id)`                                                                                                         |
-
-_Note: Every table automatically tracks record changes using `createdAt` and `updatedAt` timestamp fields._
-
 ### Data Architectural Definitions
 
 - **Single Source of Truth (`associations.ts`)**: Models are declared independently to avoid circular dependency errors during boot time. Relationships are injected dynamically in this file before the database synchronization hook runs.
-- **Typing Constraints**: Standard attributes like names, emails, and passwords map to variable-length character fields. Phone metrics utilize string structures to capture country formatting extensions natively without truncation issues (`numer_telefonu`).
+- **Typing Constraints & Fields**: Standard identity attributes such as `name`, `surname`, `email`, and `password` map to variable-length character fields. Contact metrics utilize string structures to capture country formatting extensions natively without truncation issues (`numer_telefonu`).
+- **Relational Integrity**: Entities are linked using explicitly defined foreign key attributes matching the database layout precisely, tracking internal properties such as `identificationId`, `addressId`, `roleId`, `clanId`, and `routeRiwild`. Every underlying table automatically tracks operational changes via `createdAt` and `updatedAt` timestamp markers.
 
 ---
 
