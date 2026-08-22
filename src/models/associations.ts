@@ -7,9 +7,7 @@ import Clan from './clan.js';
 import TeamLeader from './teamLeader.js';
 import RouteRiwi from './routeRiwi.js';
 
-// ====================
 // CITY - ADDRESS
-// ====================
 
 City.hasMany(Address, {
   foreignKey: 'cityId',
@@ -19,9 +17,7 @@ Address.belongsTo(City, {
   foreignKey: 'cityId',
 });
 
-// ====================
 // CODER
-// ====================
 
 // Coder - Identification
 Coder.belongsTo(Identification, {
@@ -68,9 +64,7 @@ RouteRiwi.hasMany(Coder, {
   foreignKey: 'routeRiwiId',
 });
 
-// ====================
 // TEAM LEADER
-// ====================
 
 // TeamLeader - Role
 TeamLeader.belongsTo(Role, {
