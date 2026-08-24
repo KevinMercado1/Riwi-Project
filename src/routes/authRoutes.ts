@@ -1,7 +1,12 @@
 import express, { type Request, type Response } from 'express';
 import bcrypt from 'bcrypt';
+
 import Coder from '../models/coder.js';
 import TeamLeader from '../models/teamLeader.js';
+import Role from '../models/role.js';
+import Clan from '../models/clan.js';
+import RouteRiwi from '../models/routeRiwi.js';
+
 import { validateRequest } from '../middlewares/validateRequests.js';
 import { loginSchema } from '../dto/login-schema.js';
 import { generateToken } from '../utils/jwt.js';
@@ -46,13 +51,34 @@ router.post(
         role,
       });
 
-      const userResponse = user.toJSON();
-      delete userResponse.password;
+      const roleRecord = await Role.findByPk(user.roleId);
+
+      const clanRecord = await Clan.findByPk(user.clanId);
+
+      const routeRecord = await RouteRiwi.findByPk(user.routeRiwiId);
 
       return res.status(200).json({
         message: 'Login successful',
+
         token,
-        user: userResponse,
+
+        user: {
+          id: user.id,
+          name: user.name,
+          surname: user.surname,
+          numer_telefonu: user.numer_telefonu,
+          email: user.email,
+
+          // IDs
+          roleId: user.roleId,
+          clanId: user.clanId,
+          routeRiwiId: user.routeRiwiId,
+
+          // NOMBRES
+          role: roleRecord?.name ?? null,
+          clan: clanRecord?.name ?? null,
+          routeRiwi: routeRecord?.name ?? null,
+        },
       });
     } catch (error) {
       console.error('Login error:', error);

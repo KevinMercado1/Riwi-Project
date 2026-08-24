@@ -1,4 +1,5 @@
 import express from 'express';
+
 import {
   registerTeamLeader,
   getTeamLeaders,
@@ -7,8 +8,8 @@ import {
 } from '../controllers/teamLeaderController.js';
 
 import { validateRequest } from '../middlewares/validateRequests.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { createTeamLeaderSchema } from '../dto/create-tlschema.js';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 

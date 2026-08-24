@@ -80,7 +80,7 @@ TeamLeader.belongsTo(RouteRiwi, {
   foreignKey: 'routeRiwiId',
 });
 
-RouteRiwi.hasMany(TeamLeader, {
+RouteRiwi.hasOne(TeamLeader, {
   foreignKey: 'routeRiwiId',
 });
 

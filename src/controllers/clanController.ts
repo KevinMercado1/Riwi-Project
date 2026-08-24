@@ -1,22 +1,33 @@
 import type { Request, Response } from 'express';
+
 import Clan from '../models/clan.js';
+import Coder from '../models/coder.js';
+import RouteRiwi from '../models/routeRiwi.js';
+import TeamLeader from '../models/teamLeader.js';
 
 export const registerClan = async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
 
+    if (!name) {
+      return res.status(400).json({
+        message: 'Clan name is required',
+      });
+    }
+
     const clan = await Clan.create({
       name,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Clan created successfully',
       clan,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error('Error creating clan:', error);
+
+    return res.status(500).json({
       message: 'Error creating clan',
-      error,
     });
   }
 };
@@ -25,11 +36,53 @@ export const getClans = async (req: Request, res: Response) => {
   try {
     const clans = await Clan.findAll();
 
-    res.status(200).json(clans);
+    return res.status(200).json(clans);
   } catch (error) {
-    res.status(500).json({
+    console.error('Error fetching clans:', error);
+
+    return res.status(500).json({
       message: 'Error fetching clans',
-      error,
+    });
+  }
+};
+
+export const getClanById = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+
+    const clan = await Clan.findByPk(id, {
+      attributes: ['id', 'name'],
+
+      include: [
+        {
+          model: Coder,
+          attributes: ['id', 'name', 'surname', 'email', 'clanId'],
+        },
+        {
+          model: TeamLeader,
+          attributes: ['id', 'name', 'surname', 'email', 'clanId'],
+        },
+      ],
+    });
+
+    if (!clan) {
+      return res.status(404).json({
+        message: 'Clan not found',
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Clan found successfully',
+      clan,
+    });
+  } catch (error) {
+    console.error('Error getting clan:', error);
+
+    return res.status(500).json({
+      message: 'Error getting clan',
     });
   }
 };
@@ -41,6 +94,12 @@ export const updateClan = async (
   try {
     const { id } = req.params;
     const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        message: 'Clan name is required',
+      });
+    }
 
     const clan = await Clan.findByPk(id);
 
@@ -54,14 +113,15 @@ export const updateClan = async (
       name,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Clan updated successfully',
       clan,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error('Error updating clan:', error);
+
+    return res.status(500).json({
       message: 'Error updating clan',
-      error,
     });
   }
 };
@@ -83,11 +143,13 @@ export const deleteClan = async (
 
     await clan.destroy();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Clan deleted successfully',
     });
   } catch (error) {
-    res.status(500).json({
+    console.error('Error deleting clan:', error);
+
+    return res.status(500).json({
       message: 'Error deleting clan',
     });
   }

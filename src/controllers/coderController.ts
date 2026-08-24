@@ -74,7 +74,7 @@ export const registerCoder = async (req: Request, res: Response) => {
       },
     });
 
-    // EMAIL
+    // CHECK EMAIL
     const existingCoderByEmail = await Coder.findOne({
       where: {
         email,
@@ -87,7 +87,7 @@ export const registerCoder = async (req: Request, res: Response) => {
       });
     }
 
-    // IDENTIFICATION
+    // CHECK IDENTIFICATION
     const existingIdentification = await Identification.findOne({
       where: {
         number: identificationNumber,
@@ -100,6 +100,7 @@ export const registerCoder = async (req: Request, res: Response) => {
       });
     }
 
+    // IDENTIFICATION
     const identification = await Identification.create({
       type: identificationType,
       number: identificationNumber,
@@ -163,6 +164,34 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
       attributes: {
         exclude: ['password'],
       },
+      include: [
+        {
+          model: Role,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Clan,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: RouteRiwi,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Address,
+          attributes: ['id', 'address'],
+          include: [
+            {
+              model: City,
+              attributes: ['id', 'name'],
+            },
+          ],
+        },
+        {
+          model: Identification,
+          attributes: ['id', 'type', 'number'],
+        },
+      ],
     });
 
     if (!coder) {
@@ -220,13 +249,44 @@ export const updateCoder = async (
       routeRiwiId,
     });
 
-    const coderResponse = coder.toJSON();
-
-    delete coderResponse.password;
+    // GET UPDATED CODER WITH RELATIONS
+    const updatedCoder = await Coder.findByPk(id, {
+      attributes: {
+        exclude: ['password'],
+      },
+      include: [
+        {
+          model: Role,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Clan,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: RouteRiwi,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Address,
+          attributes: ['id', 'address'],
+          include: [
+            {
+              model: City,
+              attributes: ['id', 'name'],
+            },
+          ],
+        },
+        {
+          model: Identification,
+          attributes: ['id', 'type', 'number'],
+        },
+      ],
+    });
 
     return res.status(200).json({
       msg: 'Coder updated successfully',
-      coder: coderResponse,
+      coder: updatedCoder,
     });
   } catch (error) {
     console.error('Error updating Coder:', error);

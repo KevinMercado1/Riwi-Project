@@ -1,22 +1,20 @@
 import express from 'express';
+
 import {
   registerRouteRiwi,
   getRoutesRiwi,
+  getRouteRiwiById,
   updateRouteRiwi,
   deleteRouteRiwi,
 } from '../controllers/routeRiwiController.js';
-import { validateRequest } from '../middlewares/validateRequests.js';
-import { createRouteRiwiSchema } from '../dto/create-routeriwischema.js';
 
 const router = express.Router();
 
-router.post(
-  '/register',
-  validateRequest(createRouteRiwiSchema),
-  registerRouteRiwi
-);
+router.post('/', registerRouteRiwi);
 
 router.get('/', getRoutesRiwi);
+
+router.get('/:id', getRouteRiwiById);
 
 router.put('/:id', updateRouteRiwi);
 

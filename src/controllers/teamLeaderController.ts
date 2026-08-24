@@ -27,6 +27,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
+    // ROLE
     const [roleRecord] = await Role.findOrCreate({
       where: { name: role },
       defaults: {
@@ -34,6 +35,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
+    // CLAN
     const [clanRecord] = await Clan.findOrCreate({
       where: { name: clan },
       defaults: {
@@ -41,6 +43,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
+    // ROUTE
     const [routeRecord] = await RouteRiwi.findOrCreate({
       where: { name: routeRiwi },
       defaults: {
@@ -48,6 +51,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
+    // CHECK ROUTE
     const existingTeamLeaderByRoute = await TeamLeader.findOne({
       where: {
         routeRiwiId: routeRecord.id,
@@ -60,6 +64,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
+    // CHECK CLAN
     const existingTeamLeaderByClan = await TeamLeader.findOne({
       where: {
         clanId: clanRecord.id,
@@ -72,6 +77,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
+    // CHECK EMAIL
     const existingTeamLeaderByEmail = await TeamLeader.findOne({
       where: {
         email,
@@ -84,8 +90,10 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
+    // PASSWORD
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // CREATE TEAM LEADER
     const teamLeader = await TeamLeader.create({
       name,
       surname,
@@ -97,6 +105,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       routeRiwiId: routeRecord.id,
     });
 
+    // REMOVE PASSWORD FROM RESPONSE
     const teamLeaderResponse = teamLeader.toJSON();
 
     delete teamLeaderResponse.password;
@@ -130,6 +139,20 @@ export const getTeamLeaders = async (req: AuthRequest, res: Response) => {
       attributes: {
         exclude: ['password'],
       },
+      include: [
+        {
+          model: Role,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Clan,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: RouteRiwi,
+          attributes: ['id', 'name'],
+        },
+      ],
     });
 
     if (!teamLeader) {
@@ -183,13 +206,30 @@ export const updateTeamLeader = async (
       clanId,
     });
 
-    const teamLeaderResponse = teamLeader.toJSON();
-
-    delete teamLeaderResponse.password;
+    // GET UPDATED DATA WITH RELATIONS
+    const updatedTeamLeader = await TeamLeader.findByPk(id, {
+      attributes: {
+        exclude: ['password'],
+      },
+      include: [
+        {
+          model: Role,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Clan,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: RouteRiwi,
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
 
     return res.status(200).json({
       msg: 'TeamLeader updated successfully',
-      teamLeader: teamLeaderResponse,
+      teamLeader: updatedTeamLeader,
     });
   } catch (error) {
     console.error('Error updating TeamLeader:', error);

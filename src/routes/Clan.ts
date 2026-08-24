@@ -1,18 +1,20 @@
 import express from 'express';
+
 import {
   registerClan,
   getClans,
+  getClanById,
   updateClan,
   deleteClan,
 } from '../controllers/clanController.js';
-import { validateRequest } from '../middlewares/validateRequests.js';
-import { createClanSchema } from '../dto/create-clanschema.js';
 
 const router = express.Router();
 
-router.post('/register', validateRequest(createClanSchema), registerClan);
+router.post('/', registerClan);
 
 router.get('/', getClans);
+
+router.get('/:id', getClanById);
 
 router.put('/:id', updateClan);
 
