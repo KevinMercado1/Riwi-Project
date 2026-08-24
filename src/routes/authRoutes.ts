@@ -4,6 +4,7 @@ import Coder from '../models/coder.js';
 import TeamLeader from '../models/teamLeader.js';
 import { validateRequest } from '../middlewares/validateRequests.js';
 import { loginSchema } from '../dto/login-schema.js';
+import { generateToken } from '../utils/jwt.js';
 
 const router = express.Router();
 
@@ -38,21 +39,29 @@ router.post(
         });
       }
 
+      const role = coder ? 'coder' : 'teamleader';
+
+      const token = generateToken({
+        id: user.id,
+        role,
+      });
+
       const userResponse = user.toJSON();
       delete userResponse.password;
 
-      res.json({
+      return res.status(200).json({
         message: 'Login successful',
+        token,
         user: userResponse,
       });
     } catch (error) {
-      console.log(error);
+      console.error('Login error:', error);
 
-      res.status(500).json({
+      return res.status(500).json({
         message: 'Internal server error',
       });
     }
-  },
+  }
 );
 
 export default router;
