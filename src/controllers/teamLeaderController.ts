@@ -1,9 +1,12 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
+
 import TeamLeader from '../models/teamLeader.js';
 import Role from '../models/role.js';
 import Clan from '../models/clan.js';
 import RouteRiwi from '../models/routeRiwi.js';
+
+import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
 export const registerTeamLeader = async (req: Request, res: Response) => {
   try {
@@ -24,7 +27,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
-  
     const [roleRecord] = await Role.findOrCreate({
       where: { name: role },
       defaults: {
@@ -32,7 +34,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
-  
     const [clanRecord] = await Clan.findOrCreate({
       where: { name: clan },
       defaults: {
@@ -40,14 +41,12 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
-  
     const [routeRecord] = await RouteRiwi.findOrCreate({
       where: { name: routeRiwi },
       defaults: {
         name: routeRiwi,
       },
     });
-
 
     const existingTeamLeaderByRoute = await TeamLeader.findOne({
       where: {
@@ -73,7 +72,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
-
     const existingTeamLeaderByEmail = await TeamLeader.findOne({
       where: {
         email,
@@ -88,7 +86,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-
     const teamLeader = await TeamLeader.create({
       name,
       surname,
@@ -101,6 +98,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
     });
 
     const teamLeaderResponse = teamLeader.toJSON();
+
     delete teamLeaderResponse.password;
 
     return res.status(201).json({
@@ -116,17 +114,33 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
   }
 };
 
-export const getTeamLeaders = async (req: Request, res: Response) => {
+export const getTeamLeaders = async (req: AuthRequest, res: Response) => {
   try {
-    const teamLeaders = await TeamLeader.findAll({
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: 'User not authenticated',
+      });
+    }
+
+    console.log('USER ID FROM TOKEN:', userId);
+
+    const teamLeader = await TeamLeader.findByPk(userId, {
       attributes: {
         exclude: ['password'],
       },
     });
 
-    return res.status(200).json(teamLeaders);
+    if (!teamLeader) {
+      return res.status(404).json({
+        message: 'TeamLeader not found',
+      });
+    }
+
+    return res.status(200).json(teamLeader);
   } catch (error) {
-    console.error('Error getting TeamLeaders:', error);
+    console.error('Error getting TeamLeader:', error);
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -170,6 +184,7 @@ export const updateTeamLeader = async (
     });
 
     const teamLeaderResponse = teamLeader.toJSON();
+
     delete teamLeaderResponse.password;
 
     return res.status(200).json({

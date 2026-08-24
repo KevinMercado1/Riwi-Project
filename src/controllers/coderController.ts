@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
+
 import Coder from '../models/coder.js';
 import City from '../models/city.js';
 import Address from '../models/address.js';
@@ -7,6 +8,8 @@ import Identification from '../models/Identification.js';
 import Role from '../models/role.js';
 import Clan from '../models/clan.js';
 import RouteRiwi from '../models/routeRiwi.js';
+
+import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
 export const registerCoder = async (req: Request, res: Response) => {
   try {
@@ -31,34 +34,47 @@ export const registerCoder = async (req: Request, res: Response) => {
       });
     }
 
+    // CITY
     const [city] = await City.findOrCreate({
-      where: { name: cityName },
+      where: {
+        name: cityName,
+      },
       defaults: {
         name: cityName,
       },
     });
 
+    // ROLE
     const [roleRecord] = await Role.findOrCreate({
-      where: { name: role },
+      where: {
+        name: role,
+      },
       defaults: {
         name: role,
       },
     });
 
+    // CLAN
     const [clanRecord] = await Clan.findOrCreate({
-      where: { name: clan },
+      where: {
+        name: clan,
+      },
       defaults: {
         name: clan,
       },
     });
 
+    // ROUTE
     const [routeRecord] = await RouteRiwi.findOrCreate({
-      where: { name: routeRiwi },
+      where: {
+        name: routeRiwi,
+      },
       defaults: {
         name: routeRiwi,
       },
     });
 
+    // EMAIL
     const existingCoderByEmail = await Coder.findOne({
       where: {
         email,
@@ -71,6 +87,7 @@ export const registerCoder = async (req: Request, res: Response) => {
       });
     }
 
+    // IDENTIFICATION
     const existingIdentification = await Identification.findOne({
       where: {
         number: identificationNumber,
@@ -88,13 +105,16 @@ export const registerCoder = async (req: Request, res: Response) => {
       number: identificationNumber,
     });
 
+    // ADDRESS
     const newAddress = await Address.create({
       address,
       cityId: city.id,
     });
 
+    // PASSWORD
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // CODER
     const coder = await Coder.create({
       identificationId: identification.id,
       name,
@@ -125,17 +145,35 @@ export const registerCoder = async (req: Request, res: Response) => {
   }
 };
 
-export const getCoders = async (req: Request, res: Response) => {
+export const getCoders = async (req: AuthRequest, res: Response) => {
   try {
-    const coders = await Coder.findAll({
+    if (!req.user) {
+      return res.status(401).json({
+        message: 'User not authenticated',
+      });
+    }
+
+    if (req.user.role !== 'coder') {
+      return res.status(403).json({
+        message: 'Only coders can access this resource',
+      });
+    }
+
+    const coder = await Coder.findByPk(req.user.id, {
       attributes: {
         exclude: ['password'],
       },
     });
 
-    return res.status(200).json(coders);
+    if (!coder) {
+      return res.status(404).json({
+        message: 'Coder not found',
+      });
+    }
+
+    return res.status(200).json(coder);
   } catch (error) {
-    console.error('Error getting Coders:', error);
+    console.error('Error getting Coder:', error);
 
     return res.status(500).json({
       message: 'Internal server error',

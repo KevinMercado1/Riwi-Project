@@ -14,7 +14,6 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Search for the user as a Coder
     const coder = await Coder.findOne({
       where: { email },
     });

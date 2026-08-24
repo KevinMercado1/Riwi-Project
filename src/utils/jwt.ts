@@ -1,18 +1,28 @@
 import jwt from 'jsonwebtoken';
-import 'dotenv/config';
 
-const { JWT_SECRET } = process.env;
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET no está configurado');
+export interface JwtPayload {
+  id: string;
+  role: 'coder' | 'teamleader';
 }
 
-export const generateToken = (payload: object): string => {
-  return jwt.sign(payload, JWT_SECRET, {
+export const generateToken = (payload: JwtPayload): string => {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return jwt.sign(payload, secret, {
     expiresIn: '1d',
   });
 };
 
-export const verifyToken = (token: string) => {
-  return jwt.verify(token, JWT_SECRET);
+export const verifyToken = (token: string): JwtPayload => {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return jwt.verify(token, secret) as JwtPayload;
 };

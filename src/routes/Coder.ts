@@ -1,21 +1,25 @@
 import express from 'express';
+
 import {
   registerCoder,
   getCoders,
   updateCoder,
   deleteCoder,
 } from '../controllers/coderController.js';
-import { validateRequest } from '../middlewares/validateRequests.js';
-import { createCodeSchema } from '../dto/create-coderschema.js';
+
+import {
+  authMiddleware,
+  type AuthRequest,
+} from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/register', validateRequest(createCodeSchema), registerCoder);
+router.post('/', registerCoder);
 
-router.get('/', getCoders);
+router.get('/', authMiddleware, getCoders);
 
-router.put('/:id', updateCoder);
+router.put('/:id', authMiddleware, updateCoder);
 
-router.delete('/:id', deleteCoder);
+router.delete('/:id', authMiddleware, deleteCoder);
 
 export default router;

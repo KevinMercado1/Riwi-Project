@@ -5,7 +5,9 @@ import {
   updateTeamLeader,
   deleteTeamLeader,
 } from '../controllers/teamLeaderController.js';
+
 import { validateRequest } from '../middlewares/validateRequests.js';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { createTeamLeaderSchema } from '../dto/create-tlschema.js';
 
 const router = express.Router();
@@ -16,10 +18,10 @@ router.post(
   registerTeamLeader
 );
 
-router.get('/', getTeamLeaders);
+router.get('/', authMiddleware, getTeamLeaders);
 
-router.put('/:id', updateTeamLeader);
+router.put('/:id', authMiddleware, updateTeamLeader);
 
-router.delete('/:id', deleteTeamLeader);
+router.delete('/:id', authMiddleware, deleteTeamLeader);
 
 export default router;

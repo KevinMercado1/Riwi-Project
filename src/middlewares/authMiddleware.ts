@@ -1,8 +1,15 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.js';
 
+export interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: 'coder' | 'teamleader';
+  };
+}
+
 export const authMiddleware = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -25,10 +32,17 @@ export const authMiddleware = (
 
     const decoded = verifyToken(token);
 
-    console.log('Authenticated user:', decoded);
+    req.user = {
+      id: decoded.id,
+      role: decoded.role,
+    };
+
+    console.log('JWT USER:', req.user);
 
     next();
   } catch (error) {
+    console.error('JWT ERROR:', error);
+
     return res.status(401).json({
       message: 'Invalid or expired token',
     });
