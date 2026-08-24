@@ -52,7 +52,7 @@ router.post(
         message: 'Internal server error',
       });
     }
-  }
+  },
 );
 
 export default router;
