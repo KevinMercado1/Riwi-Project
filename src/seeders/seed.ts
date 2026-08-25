@@ -7,6 +7,7 @@ import Clan from '../models/clan.js';
 import Coder from '../models/coder.js';
 import Identification from '../models/Identification.js';
 import Role from '../models/role.js';
+import Room from '../models/room.js';
 import RouteRiwi from '../models/routeRiwi.js';
 import TeamLeader from '../models/teamLeader.js';
 
@@ -223,7 +224,7 @@ const seed = async (): Promise<void> => {
       },
     });
 
-    // ROUTES
+    // ROUTES RIWI
 
     console.log('Creating Riwi routes...');
 
@@ -245,10 +246,45 @@ const seed = async (): Promise<void> => {
       },
     });
 
+    // ROOMS
+
+    console.log('Creating rooms...');
+
+    const [roomA] = await Room.findOrCreate({
+      where: {
+        name: 'Room A',
+      },
+      defaults: {
+        name: 'Room A',
+        capacity: 30,
+      },
+    });
+
+    const [roomB] = await Room.findOrCreate({
+      where: {
+        name: 'Room B',
+      },
+      defaults: {
+        name: 'Room B',
+        capacity: 25,
+      },
+    });
+
+    const [roomC] = await Room.findOrCreate({
+      where: {
+        name: 'Room C',
+      },
+      defaults: {
+        name: 'Room C',
+        capacity: 40,
+      },
+    });
+
     // TEAM LEADERS
 
     console.log('Creating team leaders...');
 
+    // CARLOS
     let carlos = await TeamLeader.findOne({
       where: {
         email: 'carlos@riwi.io',
@@ -264,6 +300,7 @@ const seed = async (): Promise<void> => {
         roleId: teamLeaderRole.id,
         routeRiwiId: basicRoute.id,
         clanId: clanAlpha.id,
+        roomId: roomA.id,
       });
     } else {
       carlos = await TeamLeader.create({
@@ -275,9 +312,11 @@ const seed = async (): Promise<void> => {
         roleId: teamLeaderRole.id,
         routeRiwiId: basicRoute.id,
         clanId: clanAlpha.id,
+        roomId: roomA.id,
       });
     }
 
+    // LAURA
     let laura = await TeamLeader.findOne({
       where: {
         email: 'laura@riwi.io',
@@ -293,6 +332,7 @@ const seed = async (): Promise<void> => {
         roleId: teamLeaderRole.id,
         routeRiwiId: advancedRoute.id,
         clanId: clanBeta.id,
+        roomId: roomB.id,
       });
     } else {
       laura = await TeamLeader.create({
@@ -304,6 +344,7 @@ const seed = async (): Promise<void> => {
         roleId: teamLeaderRole.id,
         routeRiwiId: advancedRoute.id,
         clanId: clanBeta.id,
+        roomId: roomB.id,
       });
     }
 
@@ -311,6 +352,7 @@ const seed = async (): Promise<void> => {
 
     console.log('Creating coders...');
 
+    // JUAN
     let juan = await Coder.findOne({
       where: {
         email: 'juan@riwi.io',
@@ -328,7 +370,7 @@ const seed = async (): Promise<void> => {
         addressId: addressBogota.id,
         clanId: clanAlpha.id,
         routeRiwiId: basicRoute.id,
-        teamLeaderId: carlos.id,
+        roomId: roomA.id,
       });
     } else {
       juan = await Coder.create({
@@ -342,10 +384,11 @@ const seed = async (): Promise<void> => {
         addressId: addressBogota.id,
         clanId: clanAlpha.id,
         routeRiwiId: basicRoute.id,
-        teamLeaderId: carlos.id,
+        roomId: roomA.id,
       });
     }
 
+    // MARIA
     let maria = await Coder.findOne({
       where: {
         email: 'maria@riwi.io',
@@ -363,7 +406,7 @@ const seed = async (): Promise<void> => {
         addressId: addressCali.id,
         clanId: clanBeta.id,
         routeRiwiId: advancedRoute.id,
-        teamLeaderId: laura.id,
+        roomId: roomB.id,
       });
     } else {
       maria = await Coder.create({
@@ -377,7 +420,7 @@ const seed = async (): Promise<void> => {
         addressId: addressCali.id,
         clanId: clanBeta.id,
         routeRiwiId: advancedRoute.id,
-        teamLeaderId: laura.id,
+        roomId: roomB.id,
       });
     }
 
@@ -389,30 +432,70 @@ const seed = async (): Promise<void> => {
     console.log('========================================');
 
     console.log('');
-    console.log('LOGIN USERS');
+    console.log('CITIES');
+    console.log('----------------------------------------');
+    console.log(`- ${barranquilla.name}`);
+    console.log(`- ${medellin.name}`);
+    console.log(`- ${bogota.name}`);
+    console.log(`- ${cali.name}`);
+
+    console.log('');
+    console.log('CLANS');
+    console.log('----------------------------------------');
+    console.log(`- ${clanAlpha.name}`);
+    console.log(`- ${clanBeta.name}`);
+    console.log(`- ${clanGamma.name}`);
+
+    console.log('');
+    console.log('ROUTES');
+    console.log('----------------------------------------');
+    console.log(`- ${basicRoute.name}`);
+    console.log(`- ${advancedRoute.name}`);
+
+    console.log('');
+    console.log('ROOMS');
+    console.log('----------------------------------------');
+    console.log(`- ${roomA.name} | Capacity: ${roomA.capacity}`);
+    console.log(`- ${roomB.name} | Capacity: ${roomB.capacity}`);
+    console.log(`- ${roomC.name} | Capacity: ${roomC.capacity}`);
+
+    console.log('');
+    console.log('TEAM LEADERS');
     console.log('----------------------------------------');
 
-    console.log('Team Leader:');
+    console.log('Carlos:');
     console.log('Email: carlos@riwi.io');
     console.log('Password: Admin123');
+    console.log('Clan: Clan Alpha');
+    console.log('Route: basic');
 
     console.log('');
 
-    console.log('Team Leader:');
+    console.log('Laura:');
     console.log('Email: laura@riwi.io');
     console.log('Password: Admin123');
+    console.log('Clan: Clan Beta');
+    console.log('Route: advanced');
 
     console.log('');
+    console.log('CODERS');
+    console.log('----------------------------------------');
 
-    console.log('Coder:');
+    console.log('Juan:');
     console.log('Email: juan@riwi.io');
     console.log('Password: Coder123');
+    console.log('Clan: Clan Alpha');
+    console.log('Route: basic');
+    console.log('Room: Room A');
 
     console.log('');
 
-    console.log('Coder:');
+    console.log('Maria:');
     console.log('Email: maria@riwi.io');
     console.log('Password: Coder123');
+    console.log('Clan: Clan Beta');
+    console.log('Route: advanced');
+    console.log('Room: Room B');
 
     console.log('');
     console.log('========================================');

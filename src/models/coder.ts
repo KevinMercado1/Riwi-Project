@@ -13,6 +13,7 @@ class Coder extends Model {
   declare addressId: string;
   declare clanId: string;
   declare routeRiwiId: string;
+  declare roomId: string;
 }
 
 Coder.init(
@@ -93,6 +94,15 @@ Coder.init(
       allowNull: false,
       references: {
         model: 'routes_riwi',
+        key: 'id',
+      },
+    },
+
+    roomId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Rooms',
         key: 'id',
       },
     },

@@ -11,6 +11,7 @@ class TeamLeader extends Model {
   declare roleId: string;
   declare routeRiwiId: string;
   declare clanId: string;
+  declare roomId: string;
 }
 
 TeamLeader.init(
@@ -40,6 +41,9 @@ TeamLeader.init(
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
+      validate: {
+        isEmail: true,
+      },
     },
 
     password: {
@@ -59,6 +63,7 @@ TeamLeader.init(
     routeRiwiId: {
       type: DataTypes.UUID,
       allowNull: false,
+      unique: true,
       references: {
         model: 'routes_riwi',
         key: 'id',
@@ -74,11 +79,21 @@ TeamLeader.init(
         key: 'id',
       },
     },
+
+    roomId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Rooms',
+        key: 'id',
+      },
+    },
   },
   {
     sequelize: db,
     modelName: 'TeamLeader',
     tableName: 'team_leaders',
+    timestamps: true,
   }
 );
 

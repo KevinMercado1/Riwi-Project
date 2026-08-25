@@ -11,6 +11,7 @@ import routeIdentification from './routes/identification.js';
 import routeRole from './routes/role.js';
 import routeClan from './routes/Clan.js';
 import routeRouteRiwi from './routes/RouteRiwi.js';
+import routeRoom from './routes/Room.js';
 
 import './models/associations.js';
 
@@ -29,6 +30,7 @@ app.use('/identification', routeIdentification);
 app.use('/role', routeRole);
 app.use('/clan', routeClan);
 app.use('/routeriwi', routeRouteRiwi);
+app.use('/room', routeRoom);
 
 async function start() {
   try {

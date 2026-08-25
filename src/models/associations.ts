@@ -6,8 +6,11 @@ import Role from './role.js';
 import Clan from './clan.js';
 import TeamLeader from './teamLeader.js';
 import RouteRiwi from './routeRiwi.js';
+import Room from './room.js';
 
+// ========================================
 // CITY - ADDRESS
+// ========================================
 
 City.hasMany(Address, {
   foreignKey: 'cityId',
@@ -17,7 +20,9 @@ Address.belongsTo(City, {
   foreignKey: 'cityId',
 });
 
+// ========================================
 // CODER
+// ========================================
 
 // Coder - Identification
 Coder.belongsTo(Identification, {
@@ -64,7 +69,18 @@ RouteRiwi.hasMany(Coder, {
   foreignKey: 'routeRiwiId',
 });
 
+// Coder - Room
+Coder.belongsTo(Room, {
+  foreignKey: 'roomId',
+});
+
+Room.hasMany(Coder, {
+  foreignKey: 'roomId',
+});
+
+// ========================================
 // TEAM LEADER
+// ========================================
 
 // TeamLeader - Role
 TeamLeader.belongsTo(Role, {
@@ -91,4 +107,13 @@ TeamLeader.belongsTo(Clan, {
 
 Clan.hasOne(TeamLeader, {
   foreignKey: 'clanId',
+});
+
+// TeamLeader - Room
+TeamLeader.belongsTo(Room, {
+  foreignKey: 'roomId',
+});
+
+Room.hasMany(TeamLeader, {
+  foreignKey: 'roomId',
 });

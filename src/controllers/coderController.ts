@@ -8,6 +8,7 @@ import Identification from '../models/Identification.js';
 import Role from '../models/role.js';
 import Clan from '../models/clan.js';
 import RouteRiwi from '../models/routeRiwi.js';
+import Room from '../models/room.js';
 
 import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
@@ -26,11 +27,36 @@ export const registerCoder = async (req: Request, res: Response) => {
       role,
       clan,
       routeRiwi,
+      roomId,
     } = req.body;
 
     if (!password) {
       return res.status(400).json({
         message: 'Password is required',
+      });
+    }
+
+    // ROOM
+    const room = await Room.findByPk(roomId);
+
+    if (!room) {
+      return res.status(404).json({
+        message: 'Room not found',
+      });
+    }
+
+    // CHECK ROOM CAPACITY
+    const codersInRoom = await Coder.count({
+      where: {
+        roomId: room.id,
+      },
+    });
+
+    if (codersInRoom >= room.capacity) {
+      return res.status(409).json({
+        message: `Room ${room.name} is full`,
+        capacity: room.capacity,
+        currentCoders: codersInRoom,
       });
     }
 
@@ -127,6 +153,7 @@ export const registerCoder = async (req: Request, res: Response) => {
       roleId: roleRecord.id,
       clanId: clanRecord.id,
       routeRiwiId: routeRecord.id,
+      roomId: room.id,
     });
 
     const coderResponse = coder.toJSON();
@@ -176,6 +203,10 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
         {
           model: RouteRiwi,
           attributes: ['id', 'name'],
+        },
+        {
+          model: Room,
+          attributes: ['id', 'name', 'capacity'],
         },
         {
           model: Address,
@@ -235,7 +266,35 @@ export const updateCoder = async (
       roleId,
       clanId,
       routeRiwiId,
+      roomId,
     } = req.body;
+
+    // ROOM
+    const room = await Room.findByPk(roomId);
+
+    if (!room) {
+      return res.status(404).json({
+        message: 'Room not found',
+      });
+    }
+
+    // CHECK ROOM CAPACITY
+
+    if (coder.roomId !== room.id) {
+      const codersInRoom = await Coder.count({
+        where: {
+          roomId: room.id,
+        },
+      });
+
+      if (codersInRoom >= room.capacity) {
+        return res.status(409).json({
+          message: `Room ${room.name} is full`,
+          capacity: room.capacity,
+          currentCoders: codersInRoom,
+        });
+      }
+    }
 
     await coder.update({
       identificationId,
@@ -247,6 +306,7 @@ export const updateCoder = async (
       roleId,
       clanId,
       routeRiwiId,
+      roomId: room.id,
     });
 
     // GET UPDATED CODER WITH RELATIONS
@@ -266,6 +326,10 @@ export const updateCoder = async (
         {
           model: RouteRiwi,
           attributes: ['id', 'name'],
+        },
+        {
+          model: Room,
+          attributes: ['id', 'name', 'capacity'],
         },
         {
           model: Address,
