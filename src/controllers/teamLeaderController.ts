@@ -6,6 +6,7 @@ import Role from '../models/role.js';
 import Clan from '../models/clan.js';
 import RouteRiwi from '../models/routeRiwi.js';
 import Room from '../models/room.js';
+
 import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
 export const registerTeamLeader = async (req: Request, res: Response) => {
@@ -19,7 +20,8 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       role,
       clan,
       routeRiwi,
-      roomId,
+      room,
+      capacity,
     } = req.body;
 
     if (!password) {
@@ -55,13 +57,15 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
-    const room = await Room.findByPk(roomId);
-
-    if (!room) {
-      return res.status(404).json({
-        message: 'Room not found',
-      });
-    }
+    const [roomRecord] = await Room.findOrCreate({
+      where: {
+        name: room,
+      },
+      defaults: {
+        name: room,
+        capacity,
+      },
+    });
 
     const existingTeamLeaderByRoute = await TeamLeader.findOne({
       where: {
@@ -110,7 +114,7 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       roleId: roleRecord.id,
       clanId: clanRecord.id,
       routeRiwiId: routeRecord.id,
-      roomId: room.id,
+      roomId: roomRecord.id,
     });
 
     const teamLeaderResponse = await TeamLeader.findByPk(teamLeader.id, {
@@ -227,19 +231,28 @@ export const updateTeamLeader = async (
       roleId,
       routeRiwiId,
       clanId,
-      roomId,
+      room,
+      capacity,
     } = req.body;
 
-    const newRoomId = roomId || teamLeader.roomId;
     const newRouteRiwiId = routeRiwiId || teamLeader.routeRiwiId;
+
     const newClanId = clanId || teamLeader.clanId;
 
-    const room = await Room.findByPk(newRoomId);
+    let newRoomId = teamLeader.roomId;
 
-    if (!room) {
-      return res.status(404).json({
-        message: 'Room not found',
+    if (room) {
+      const [roomRecord] = await Room.findOrCreate({
+        where: {
+          name: room,
+        },
+        defaults: {
+          name: room,
+          capacity,
+        },
       });
+
+      newRoomId = roomRecord.id;
     }
 
     const existingTeamLeaderByRoute = await TeamLeader.findOne({
