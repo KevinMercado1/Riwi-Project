@@ -12,6 +12,8 @@ import Room from '../models/room.js';
 
 import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
+// REGISTER CODER
+
 export const registerCoder = async (req: Request, res: Response) => {
   try {
     const {
@@ -30,6 +32,8 @@ export const registerCoder = async (req: Request, res: Response) => {
       roomId,
     } = req.body;
 
+    // PASSWORD
+
     if (!password) {
       return res.status(400).json({
         message: 'Password is required',
@@ -37,6 +41,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     }
 
     // ROOM
+
     const room = await Room.findByPk(roomId);
 
     if (!room) {
@@ -46,6 +51,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     }
 
     // CHECK ROOM CAPACITY
+
     const codersInRoom = await Coder.count({
       where: {
         roomId: room.id,
@@ -61,6 +67,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     }
 
     // CITY
+
     const [city] = await City.findOrCreate({
       where: {
         name: cityName,
@@ -71,6 +78,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     });
 
     // ROLE
+
     const [roleRecord] = await Role.findOrCreate({
       where: {
         name: role,
@@ -81,6 +89,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     });
 
     // CLAN
+
     const [clanRecord] = await Clan.findOrCreate({
       where: {
         name: clan,
@@ -91,6 +100,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     });
 
     // ROUTE
+
     const [routeRecord] = await RouteRiwi.findOrCreate({
       where: {
         name: routeRiwi,
@@ -101,6 +111,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     });
 
     // CHECK EMAIL
+
     const existingCoderByEmail = await Coder.findOne({
       where: {
         email,
@@ -114,6 +125,7 @@ export const registerCoder = async (req: Request, res: Response) => {
     }
 
     // CHECK IDENTIFICATION
+
     const existingIdentification = await Identification.findOne({
       where: {
         number: identificationNumber,
@@ -127,21 +139,25 @@ export const registerCoder = async (req: Request, res: Response) => {
     }
 
     // IDENTIFICATION
+
     const identification = await Identification.create({
       type: identificationType,
       number: identificationNumber,
     });
 
     // ADDRESS
+
     const newAddress = await Address.create({
       address,
       cityId: city.id,
     });
 
-    // PASSWORD
+    // PASSWORD HASH
+
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // CODER
+    // CREATE CODER
+
     const coder = await Coder.create({
       identificationId: identification.id,
       name,
@@ -156,9 +172,53 @@ export const registerCoder = async (req: Request, res: Response) => {
       roomId: room.id,
     });
 
-    const coderResponse = coder.toJSON();
+    // GET CODER WITH RELATIONS
 
-    delete coderResponse.password;
+    const coderResponse = await Coder.findByPk(coder.id, {
+      attributes: {
+        exclude: ['password'],
+      },
+
+      include: [
+        {
+          model: Role,
+          attributes: ['id', 'name'],
+        },
+
+        {
+          model: Clan,
+          attributes: ['id', 'name'],
+        },
+
+        {
+          model: RouteRiwi,
+          attributes: ['id', 'name'],
+        },
+
+        {
+          model: Room,
+          as: 'room',
+          attributes: ['id', 'name', 'capacity'],
+        },
+
+        {
+          model: Address,
+          attributes: ['id', 'address'],
+
+          include: [
+            {
+              model: City,
+              attributes: ['id', 'name'],
+            },
+          ],
+        },
+
+        {
+          model: Identification,
+          attributes: ['id', 'type', 'number'],
+        },
+      ],
+    });
 
     return res.status(201).json({
       msg: 'Coder created successfully',
@@ -173,13 +233,19 @@ export const registerCoder = async (req: Request, res: Response) => {
   }
 };
 
+// GET AUTHENTICATED CODER
+
 export const getCoders = async (req: AuthRequest, res: Response) => {
   try {
+    // CHECK AUTHENTICATION
+
     if (!req.user) {
       return res.status(401).json({
         message: 'User not authenticated',
       });
     }
+
+    // CHECK ROLE
 
     if (req.user.role !== 'coder') {
       return res.status(403).json({
@@ -187,30 +253,39 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // GET CODER WITH RELATIONS
+
     const coder = await Coder.findByPk(req.user.id, {
       attributes: {
         exclude: ['password'],
       },
+
       include: [
         {
           model: Role,
           attributes: ['id', 'name'],
         },
+
         {
           model: Clan,
           attributes: ['id', 'name'],
         },
+
         {
           model: RouteRiwi,
           attributes: ['id', 'name'],
         },
+
         {
           model: Room,
+          as: 'room',
           attributes: ['id', 'name', 'capacity'],
         },
+
         {
           model: Address,
           attributes: ['id', 'address'],
+
           include: [
             {
               model: City,
@@ -218,12 +293,15 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
             },
           ],
         },
+
         {
           model: Identification,
           attributes: ['id', 'type', 'number'],
         },
       ],
     });
+
+    // CHECK CODER
 
     if (!coder) {
       return res.status(404).json({
@@ -241,12 +319,16 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// UPDATE CODER
+
 export const updateCoder = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
+
+    // FIND CODER
 
     const coder = await Coder.findByPk(id);
 
@@ -255,6 +337,8 @@ export const updateCoder = async (
         message: "Coder doesn't exist",
       });
     }
+
+    // REQUEST DATA
 
     const {
       identificationId,
@@ -270,7 +354,10 @@ export const updateCoder = async (
     } = req.body;
 
     // ROOM
-    const room = await Room.findByPk(roomId);
+
+    const newRoomId = roomId || coder.roomId;
+
+    const room = await Room.findByPk(newRoomId);
 
     if (!room) {
       return res.status(404).json({
@@ -296,6 +383,8 @@ export const updateCoder = async (
       }
     }
 
+    // UPDATE CODER
+
     await coder.update({
       identificationId,
       name,
@@ -310,30 +399,38 @@ export const updateCoder = async (
     });
 
     // GET UPDATED CODER WITH RELATIONS
+
     const updatedCoder = await Coder.findByPk(id, {
       attributes: {
         exclude: ['password'],
       },
+
       include: [
         {
           model: Role,
           attributes: ['id', 'name'],
         },
+
         {
           model: Clan,
           attributes: ['id', 'name'],
         },
+
         {
           model: RouteRiwi,
           attributes: ['id', 'name'],
         },
+
         {
           model: Room,
+          as: 'room',
           attributes: ['id', 'name', 'capacity'],
         },
+
         {
           model: Address,
           attributes: ['id', 'address'],
+
           include: [
             {
               model: City,
@@ -341,6 +438,7 @@ export const updateCoder = async (
             },
           ],
         },
+
         {
           model: Identification,
           attributes: ['id', 'type', 'number'],
@@ -361,12 +459,16 @@ export const updateCoder = async (
   }
 };
 
+// DELETE CODER
+
 export const deleteCoder = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
+
+    // FIND CODER
 
     const coder = await Coder.findByPk(id);
 
@@ -375,6 +477,8 @@ export const deleteCoder = async (
         message: "Coder doesn't exist",
       });
     }
+
+    // DELETE CODER
 
     await coder.destroy();
 

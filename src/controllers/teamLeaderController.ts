@@ -6,10 +6,8 @@ import Role from '../models/role.js';
 import Clan from '../models/clan.js';
 import RouteRiwi from '../models/routeRiwi.js';
 import Room from '../models/room.js';
-
 import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
-// CREATE
 export const registerTeamLeader = async (req: Request, res: Response) => {
   try {
     const {
@@ -30,7 +28,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
-    // ROLE
     const [roleRecord] = await Role.findOrCreate({
       where: {
         name: role,
@@ -40,7 +37,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
-    // CLAN
     const [clanRecord] = await Clan.findOrCreate({
       where: {
         name: clan,
@@ -50,7 +46,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
-    // ROUTE
     const [routeRecord] = await RouteRiwi.findOrCreate({
       where: {
         name: routeRiwi,
@@ -60,7 +55,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
-    // ROOM
     const room = await Room.findByPk(roomId);
 
     if (!room) {
@@ -69,7 +63,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
-    // CHECK ROUTE
     const existingTeamLeaderByRoute = await TeamLeader.findOne({
       where: {
         routeRiwiId: routeRecord.id,
@@ -108,7 +101,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // CREATE TEAM LEADER
     const teamLeader = await TeamLeader.create({
       name,
       surname,
@@ -121,9 +113,31 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       roomId: room.id,
     });
 
-    const teamLeaderResponse = teamLeader.toJSON();
-
-    delete teamLeaderResponse.password;
+    const teamLeaderResponse = await TeamLeader.findByPk(teamLeader.id, {
+      attributes: {
+        exclude: ['password'],
+      },
+      include: [
+        {
+          model: Role,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Clan,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: RouteRiwi,
+          as: 'routeRiwi',
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Room,
+          as: 'room',
+          attributes: ['id', 'name', 'capacity'],
+        },
+      ],
+    });
 
     return res.status(201).json({
       msg: 'Team Leader created successfully',
@@ -138,7 +152,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
   }
 };
 
-// READ
 export const getTeamLeaders = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -164,10 +177,12 @@ export const getTeamLeaders = async (req: AuthRequest, res: Response) => {
         },
         {
           model: RouteRiwi,
+          as: 'routeRiwi',
           attributes: ['id', 'name'],
         },
         {
           model: Room,
+          as: 'room',
           attributes: ['id', 'name', 'capacity'],
         },
       ],
@@ -189,10 +204,9 @@ export const getTeamLeaders = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// UPDATE
 export const updateTeamLeader = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -216,8 +230,11 @@ export const updateTeamLeader = async (
       roomId,
     } = req.body;
 
-    // CHECK ROOM
-    const room = await Room.findByPk(roomId);
+    const newRoomId = roomId || teamLeader.roomId;
+    const newRouteRiwiId = routeRiwiId || teamLeader.routeRiwiId;
+    const newClanId = clanId || teamLeader.clanId;
+
+    const room = await Room.findByPk(newRoomId);
 
     if (!room) {
       return res.status(404).json({
@@ -225,10 +242,9 @@ export const updateTeamLeader = async (
       });
     }
 
-    // CHECK ROUTE
     const existingTeamLeaderByRoute = await TeamLeader.findOne({
       where: {
-        routeRiwiId,
+        routeRiwiId: newRouteRiwiId,
       },
     });
 
@@ -238,10 +254,9 @@ export const updateTeamLeader = async (
       });
     }
 
-    // CHECK CLAN
     const existingTeamLeaderByClan = await TeamLeader.findOne({
       where: {
-        clanId,
+        clanId: newClanId,
       },
     });
 
@@ -251,7 +266,6 @@ export const updateTeamLeader = async (
       });
     }
 
-    // CHECK EMAIL
     const existingTeamLeaderByEmail = await TeamLeader.findOne({
       where: {
         email,
@@ -264,19 +278,17 @@ export const updateTeamLeader = async (
       });
     }
 
-    // UPDATE
     await teamLeader.update({
       name,
       surname,
       numer_telefonu,
       email,
       roleId,
-      routeRiwiId,
-      clanId,
-      roomId,
+      routeRiwiId: newRouteRiwiId,
+      clanId: newClanId,
+      roomId: newRoomId,
     });
 
-    // GET UPDATED DATA
     const updatedTeamLeader = await TeamLeader.findByPk(id, {
       attributes: {
         exclude: ['password'],
@@ -292,10 +304,12 @@ export const updateTeamLeader = async (
         },
         {
           model: RouteRiwi,
+          as: 'routeRiwi',
           attributes: ['id', 'name'],
         },
         {
           model: Room,
+          as: 'room',
           attributes: ['id', 'name', 'capacity'],
         },
       ],
@@ -314,10 +328,9 @@ export const updateTeamLeader = async (
   }
 };
 
-// DELETE
 export const deleteTeamLeader = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;

@@ -33,7 +33,9 @@ export const registerRouteRiwi = async (req: Request, res: Response) => {
 
 export const getRoutesRiwi = async (req: Request, res: Response) => {
   try {
-    const routesRiwi = await RouteRiwi.findAll();
+    const routesRiwi = await RouteRiwi.findAll({
+      attributes: ['id', 'name'],
+    });
 
     return res.status(200).json(routesRiwi);
   } catch (error) {
@@ -47,7 +49,7 @@ export const getRoutesRiwi = async (req: Request, res: Response) => {
 
 export const getRouteRiwiById = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -58,6 +60,7 @@ export const getRouteRiwiById = async (
       include: [
         {
           model: Coder,
+          as: 'coders',
           attributes: [
             'id',
             'name',
@@ -65,10 +68,12 @@ export const getRouteRiwiById = async (
             'email',
             'clanId',
             'routeRiwiId',
+            'roomId',
           ],
         },
         {
           model: TeamLeader,
+          as: 'teamLeader',
           attributes: [
             'id',
             'name',
@@ -76,6 +81,7 @@ export const getRouteRiwiById = async (
             'email',
             'clanId',
             'routeRiwiId',
+            'roomId',
           ],
         },
       ],
@@ -102,7 +108,7 @@ export const getRouteRiwiById = async (
 
 export const updateRouteRiwi = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -141,7 +147,7 @@ export const updateRouteRiwi = async (
 
 export const deleteRouteRiwi = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
