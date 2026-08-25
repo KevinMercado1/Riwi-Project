@@ -1,10 +1,15 @@
 import type { Request, Response } from 'express';
+
 import bcrypt from 'bcrypt';
 
 import TeamLeader from '../models/teamLeader.js';
+
 import Role from '../models/role.js';
+
 import Clan from '../models/clan.js';
+
 import RouteRiwi from '../models/routeRiwi.js';
+
 import Room from '../models/room.js';
 
 import type { AuthRequest } from '../middlewares/authMiddleware.js';
@@ -24,9 +29,26 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       capacity,
     } = req.body;
 
-    if (!password) {
+    if (
+      !name ||
+      !surname ||
+      !numer_telefonu ||
+      !email ||
+      !password ||
+      !role ||
+      !clan ||
+      !routeRiwi ||
+      !room ||
+      !capacity
+    ) {
       return res.status(400).json({
-        message: 'Password is required',
+        message: 'All fields are required',
+      });
+    }
+
+    if (role !== 'team_leader') {
+      return res.status(400).json({
+        message: 'Role must be team_leader',
       });
     }
 
@@ -57,16 +79,6 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       },
     });
 
-    const [roomRecord] = await Room.findOrCreate({
-      where: {
-        name: room,
-      },
-      defaults: {
-        name: room,
-        capacity,
-      },
-    });
-
     const existingTeamLeaderByRoute = await TeamLeader.findOne({
       where: {
         routeRiwiId: routeRecord.id,
@@ -78,6 +90,16 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
         message: `There is already a Team Leader assigned to the ${routeRiwi} route`,
       });
     }
+
+    const [roomRecord] = await Room.findOrCreate({
+      where: {
+        name: room,
+      },
+      defaults: {
+        name: room,
+        capacity,
+      },
+    });
 
     const existingTeamLeaderByClan = await TeamLeader.findOne({
       where: {
@@ -210,7 +232,7 @@ export const getTeamLeaders = async (req: AuthRequest, res: Response) => {
 
 export const updateTeamLeader = async (
   req: Request<{ id: string }>,
-  res: Response,
+  res: Response
 ) => {
   try {
     const { id } = req.params;
@@ -236,7 +258,6 @@ export const updateTeamLeader = async (
     } = req.body;
 
     const newRouteRiwiId = routeRiwiId || teamLeader.routeRiwiId;
-
     const newClanId = clanId || teamLeader.clanId;
 
     let newRoomId = teamLeader.roomId;
@@ -279,16 +300,18 @@ export const updateTeamLeader = async (
       });
     }
 
-    const existingTeamLeaderByEmail = await TeamLeader.findOne({
-      where: {
-        email,
-      },
-    });
-
-    if (existingTeamLeaderByEmail && existingTeamLeaderByEmail.id !== id) {
-      return res.status(409).json({
-        message: 'A Team Leader with this email already exists',
+    if (email) {
+      const existingTeamLeaderByEmail = await TeamLeader.findOne({
+        where: {
+          email,
+        },
       });
+
+      if (existingTeamLeaderByEmail && existingTeamLeaderByEmail.id !== id) {
+        return res.status(409).json({
+          message: 'A Team Leader with this email already exists',
+        });
+      }
     }
 
     await teamLeader.update({
@@ -343,7 +366,7 @@ export const updateTeamLeader = async (
 
 export const deleteTeamLeader = async (
   req: Request<{ id: string }>,
-  res: Response,
+  res: Response
 ) => {
   try {
     const { id } = req.params;

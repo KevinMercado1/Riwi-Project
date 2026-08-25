@@ -18,4 +18,8 @@ export const createTeamLeaderSchema = z.object({
   clan: z.string().min(2, 'clan is required'),
 
   routeRiwi: z.enum(['basic', 'advanced']),
+
+  room: z.string().min(1, 'room is required'),
+
+  capacity: z.number().positive('capacity must be greater than 0'),
 });

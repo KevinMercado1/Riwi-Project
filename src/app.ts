@@ -36,7 +36,7 @@ async function start() {
   try {
     await db.authenticate();
 
-    // await db.sync({ alter: true });
+    await db.sync({ alter: true });
 
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

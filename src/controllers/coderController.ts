@@ -27,12 +27,17 @@ export const registerCoder = async (req: Request, res: Response) => {
       routeRiwi,
       roomId,
       roomName,
-      roomCapacity,
     } = req.body;
 
     if (!password) {
       return res.status(400).json({
         message: 'Password is required',
+      });
+    }
+
+    if (!roomId && !roomName) {
+      return res.status(400).json({
+        message: 'roomId or roomName is required',
       });
     }
 
@@ -43,15 +48,16 @@ export const registerCoder = async (req: Request, res: Response) => {
     }
 
     if (!room && roomName) {
-      room = await Room.create({
-        name: roomName,
-        capacity: roomCapacity || 20,
+      room = await Room.findOne({
+        where: {
+          name: roomName,
+        },
       });
     }
 
     if (!room) {
-      return res.status(400).json({
-        message: 'roomId or roomName is required',
+      return res.status(404).json({
+        message: 'Room not found',
       });
     }
 
@@ -64,7 +70,6 @@ export const registerCoder = async (req: Request, res: Response) => {
     if (codersInRoom >= room.capacity) {
       return res.status(409).json({
         message: `Room ${room.name} is full`,
-        capacity: room.capacity,
         currentCoders: codersInRoom,
       });
     }
@@ -175,7 +180,7 @@ export const registerCoder = async (req: Request, res: Response) => {
         {
           model: Room,
           as: 'room',
-          attributes: ['id', 'name', 'capacity'],
+          attributes: ['id', 'name'],
         },
         {
           model: Address,
@@ -241,7 +246,7 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
         {
           model: Room,
           as: 'room',
-          attributes: ['id', 'name', 'capacity'],
+          attributes: ['id', 'name'],
         },
         {
           model: Address,
@@ -278,7 +283,7 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
 
 export const updateCoder = async (
   req: Request<{ id: string }>,
-  res: Response,
+  res: Response
 ) => {
   try {
     const { id } = req.params;
@@ -303,27 +308,25 @@ export const updateCoder = async (
       routeRiwiId,
       roomId,
       roomName,
-      roomCapacity,
     } = req.body;
 
     let room;
 
     if (roomId) {
       room = await Room.findByPk(roomId);
+    } else if (roomName) {
+      room = await Room.findOne({
+        where: {
+          name: roomName,
+        },
+      });
     } else {
       room = await Room.findByPk(coder.roomId);
     }
 
-    if (!room && roomName) {
-      room = await Room.create({
-        name: roomName,
-        capacity: roomCapacity || 20,
-      });
-    }
-
     if (!room) {
-      return res.status(400).json({
-        message: 'roomId or roomName is required',
+      return res.status(404).json({
+        message: 'Room not found',
       });
     }
 
@@ -337,8 +340,35 @@ export const updateCoder = async (
       if (codersInRoom >= room.capacity) {
         return res.status(409).json({
           message: `Room ${room.name} is full`,
-          capacity: room.capacity,
           currentCoders: codersInRoom,
+        });
+      }
+    }
+
+    if (email) {
+      const existingCoderByEmail = await Coder.findOne({
+        where: {
+          email,
+        },
+      });
+
+      if (existingCoderByEmail && existingCoderByEmail.id !== id) {
+        return res.status(409).json({
+          message: 'A Coder with this email already exists',
+        });
+      }
+    }
+
+    if (identificationId) {
+      const existingIdentification = await Identification.findOne({
+        where: {
+          id: identificationId,
+        },
+      });
+
+      if (!existingIdentification) {
+        return res.status(404).json({
+          message: 'Identification not found',
         });
       }
     }
@@ -376,7 +406,7 @@ export const updateCoder = async (
         {
           model: Room,
           as: 'room',
-          attributes: ['id', 'name', 'capacity'],
+          attributes: ['id', 'name'],
         },
         {
           model: Address,
@@ -410,7 +440,7 @@ export const updateCoder = async (
 
 export const deleteCoder = async (
   req: Request<{ id: string }>,
-  res: Response,
+  res: Response
 ) => {
   try {
     const { id } = req.params;

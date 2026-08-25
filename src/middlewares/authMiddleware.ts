@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.js';
 
 export interface AuthRequest extends Request {
-  user: {
+  user?: {
     id: string;
     role: 'coder' | 'teamleader';
   };

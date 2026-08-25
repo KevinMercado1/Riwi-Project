@@ -34,4 +34,6 @@ export const createCodeSchema = z.object({
   clan: z.string().min(2),
 
   routeRiwi: z.enum(['basic', 'advanced']),
+
+  roomName: z.string().min(2),
 });
