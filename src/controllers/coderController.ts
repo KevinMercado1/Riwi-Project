@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
+
 import Coder from '../models/coder.js';
 import City from '../models/city.js';
 import Address from '../models/address.js';
@@ -8,6 +9,7 @@ import Role from '../models/role.js';
 import Clan from '../models/clan.js';
 import RouteRiwi from '../models/routeRiwi.js';
 import Room from '../models/room.js';
+
 import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
 export const registerCoder = async (req: Request, res: Response) => {
@@ -45,9 +47,7 @@ export const registerCoder = async (req: Request, res: Response) => {
 
     if (roomId) {
       room = await Room.findByPk(roomId);
-    }
-
-    if (!room && roomName) {
+    } else if (roomName) {
       room = await Room.findOne({
         where: {
           name: roomName,
@@ -175,6 +175,7 @@ export const registerCoder = async (req: Request, res: Response) => {
         },
         {
           model: RouteRiwi,
+          as: 'routeRiwi',
           attributes: ['id', 'name'],
         },
         {
@@ -241,6 +242,7 @@ export const getCoders = async (req: AuthRequest, res: Response) => {
         },
         {
           model: RouteRiwi,
+          as: 'routeRiwi',
           attributes: ['id', 'name'],
         },
         {
@@ -360,31 +362,67 @@ export const updateCoder = async (
     }
 
     if (identificationId) {
-      const existingIdentification = await Identification.findOne({
-        where: {
-          id: identificationId,
-        },
-      });
+      const identification = await Identification.findByPk(identificationId);
 
-      if (!existingIdentification) {
+      if (!identification) {
         return res.status(404).json({
           message: 'Identification not found',
         });
       }
     }
 
-    await coder.update({
-      identificationId,
-      name,
-      surname,
-      numer_telefonu,
-      email,
-      addressId,
-      roleId,
-      clanId,
-      routeRiwiId,
+    const updateData: {
+      identificationId?: string;
+      name?: string;
+      surname?: string;
+      numer_telefonu?: string;
+      email?: string;
+      addressId?: string;
+      roleId?: string;
+      clanId?: string;
+      routeRiwiId?: string;
+      roomId: string;
+    } = {
       roomId: room.id,
-    });
+    };
+
+    if (identificationId !== undefined) {
+      updateData.identificationId = identificationId;
+    }
+
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+
+    if (surname !== undefined) {
+      updateData.surname = surname;
+    }
+
+    if (numer_telefonu !== undefined) {
+      updateData.numer_telefonu = numer_telefonu;
+    }
+
+    if (email !== undefined) {
+      updateData.email = email;
+    }
+
+    if (addressId !== undefined) {
+      updateData.addressId = addressId;
+    }
+
+    if (roleId !== undefined) {
+      updateData.roleId = roleId;
+    }
+
+    if (clanId !== undefined) {
+      updateData.clanId = clanId;
+    }
+
+    if (routeRiwiId !== undefined) {
+      updateData.routeRiwiId = routeRiwiId;
+    }
+
+    await coder.update(updateData);
 
     const updatedCoder = await Coder.findByPk(id, {
       attributes: {
@@ -401,6 +439,7 @@ export const updateCoder = async (
         },
         {
           model: RouteRiwi,
+          as: 'routeRiwi',
           attributes: ['id', 'name'],
         },
         {
