@@ -63,7 +63,6 @@ TeamLeader.init(
     routeRiwiId: {
       type: DataTypes.UUID,
       allowNull: false,
-      unique: true,
       references: {
         model: 'routes_riwi',
         key: 'id',
@@ -73,7 +72,6 @@ TeamLeader.init(
     clanId: {
       type: DataTypes.UUID,
       allowNull: false,
-      unique: true,
       references: {
         model: 'clans',
         key: 'id',

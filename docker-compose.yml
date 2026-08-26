@@ -26,11 +26,11 @@ services:
     restart: always
 
     ports:
-      - '{PORT}:{PORT}'
+      - '3000:3000'
 
     environment:
       NODE_ENV: development
-      PORT: PORT
+      PORT: 3000
 
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
