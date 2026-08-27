@@ -8,6 +8,8 @@ import TeamLeader from './teamLeader.js';
 import RouteRiwi from './routeRiwi.js';
 import Room from './room.js';
 
+// ==================== CITY ↔ ADDRESS ====================
+
 City.hasMany(Address, {
   foreignKey: 'cityId',
 });
@@ -15,6 +17,8 @@ City.hasMany(Address, {
 Address.belongsTo(City, {
   foreignKey: 'cityId',
 });
+
+// ==================== CODER ↔ IDENTIFICATION ====================
 
 Coder.belongsTo(Identification, {
   foreignKey: 'identificationId',
@@ -24,6 +28,8 @@ Identification.hasOne(Coder, {
   foreignKey: 'identificationId',
 });
 
+// ==================== CODER ↔ ADDRESS ====================
+
 Coder.belongsTo(Address, {
   foreignKey: 'addressId',
 });
@@ -31,6 +37,8 @@ Coder.belongsTo(Address, {
 Address.hasMany(Coder, {
   foreignKey: 'addressId',
 });
+
+// ==================== CODER ↔ ROLE ====================
 
 Coder.belongsTo(Role, {
   foreignKey: 'roleId',
@@ -40,6 +48,8 @@ Role.hasMany(Coder, {
   foreignKey: 'roleId',
 });
 
+// ==================== CODER ↔ CLAN ====================
+
 Coder.belongsTo(Clan, {
   foreignKey: 'clanId',
 });
@@ -47,6 +57,8 @@ Coder.belongsTo(Clan, {
 Clan.hasMany(Coder, {
   foreignKey: 'clanId',
 });
+
+// ==================== CODER ↔ ROUTE ====================
 
 Coder.belongsTo(RouteRiwi, {
   foreignKey: 'routeRiwiId',
@@ -58,6 +70,8 @@ RouteRiwi.hasMany(Coder, {
   as: 'coders',
 });
 
+// ==================== CODER ↔ ROOM ====================
+
 Coder.belongsTo(Room, {
   foreignKey: 'roomId',
   as: 'room',
@@ -68,6 +82,8 @@ Room.hasMany(Coder, {
   as: 'coders',
 });
 
+// ==================== TEAM LEADER ↔ ROLE ====================
+
 TeamLeader.belongsTo(Role, {
   foreignKey: 'roleId',
 });
@@ -75,6 +91,8 @@ TeamLeader.belongsTo(Role, {
 Role.hasMany(TeamLeader, {
   foreignKey: 'roleId',
 });
+
+// ==================== TEAM LEADER ↔ ROUTE ====================
 
 TeamLeader.belongsTo(RouteRiwi, {
   foreignKey: 'routeRiwiId',
@@ -86,6 +104,8 @@ RouteRiwi.hasOne(TeamLeader, {
   as: 'teamLeader',
 });
 
+// ==================== TEAM LEADER ↔ CLAN ====================
+
 TeamLeader.belongsTo(Clan, {
   foreignKey: 'clanId',
 });
@@ -93,6 +113,8 @@ TeamLeader.belongsTo(Clan, {
 Clan.hasOne(TeamLeader, {
   foreignKey: 'clanId',
 });
+
+// ==================== TEAM LEADER ↔ ROOM ====================
 
 TeamLeader.belongsTo(Room, {
   foreignKey: 'roomId',

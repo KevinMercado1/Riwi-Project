@@ -29,7 +29,7 @@ Room.init(
   {
     sequelize: db,
     modelName: 'Room',
-    tableName: 'Rooms',
+    tableName: 'rooms',
     timestamps: true,
   }
 );

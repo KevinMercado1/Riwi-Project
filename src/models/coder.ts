@@ -102,7 +102,7 @@ Coder.init(
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'Rooms',
+        model: 'rooms',
         key: 'id',
       },
     },

@@ -1,11 +1,14 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 
+import sequelize from '../config/db.js';
+
 import TeamLeader from '../models/teamLeader.js';
 import Role from '../models/role.js';
 import Clan from '../models/clan.js';
 import RouteRiwi from '../models/routeRiwi.js';
 import Room from '../models/room.js';
+
 import type { AuthRequest } from '../middlewares/authMiddleware.js';
 
 export const registerTeamLeader = async (req: Request, res: Response) => {
@@ -52,125 +55,152 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
       });
     }
 
-    const existingTeamLeaderByEmail = await TeamLeader.findOne({
-      where: {
-        email,
-      },
-    });
+    const teamLeaderResponse = await sequelize.transaction(
+      async (transaction) => {
+        // Check email
+        const existingTeamLeaderByEmail = await TeamLeader.findOne({
+          where: {
+            email,
+          },
+          transaction,
+        });
 
-    if (existingTeamLeaderByEmail) {
-      return res.status(409).json({
-        message: 'A Team Leader with this email already exists',
-      });
-    }
+        if (existingTeamLeaderByEmail) {
+          throw new Error('TEAM_LEADER_EMAIL_EXISTS');
+        }
 
-    const [roleRecord] = await Role.findOrCreate({
-      where: {
-        name: role,
-      },
-      defaults: {
-        name: role,
-      },
-    });
+        // Find or create Role
+        const [roleRecord] = await Role.findOrCreate({
+          where: {
+            name: role,
+          },
+          defaults: {
+            name: role,
+          },
+          transaction,
+        });
 
-    const [clanRecord] = await Clan.findOrCreate({
-      where: {
-        name: clan,
-      },
-      defaults: {
-        name: clan,
-      },
-    });
+        // Find or create Clan
+        const [clanRecord] = await Clan.findOrCreate({
+          where: {
+            name: clan,
+          },
+          defaults: {
+            name: clan,
+          },
+          transaction,
+        });
 
-    const [routeRecord] = await RouteRiwi.findOrCreate({
-      where: {
-        name: routeRiwi,
-      },
-      defaults: {
-        name: routeRiwi,
-      },
-    });
+        // Find or create Route
+        const [routeRecord] = await RouteRiwi.findOrCreate({
+          where: {
+            name: routeRiwi,
+          },
+          defaults: {
+            name: routeRiwi,
+          },
+          transaction,
+        });
 
-    const existingTeamLeaderByRoute = await TeamLeader.findOne({
-      where: {
-        routeRiwiId: routeRecord.id,
-      },
-    });
+        // Check if route already has a Team Leader
+        const existingTeamLeaderByRoute = await TeamLeader.findOne({
+          where: {
+            routeRiwiId: routeRecord.id,
+          },
+          transaction,
+        });
 
-    if (existingTeamLeaderByRoute) {
-      return res.status(409).json({
-        message: `There is already a Team Leader assigned to the ${routeRiwi} route`,
-      });
-    }
+        if (existingTeamLeaderByRoute) {
+          throw new Error('ROUTE_ALREADY_ASSIGNED');
+        }
 
-    const existingTeamLeaderByClan = await TeamLeader.findOne({
-      where: {
-        clanId: clanRecord.id,
-      },
-    });
+        // Check if clan already has a Team Leader
+        const existingTeamLeaderByClan = await TeamLeader.findOne({
+          where: {
+            clanId: clanRecord.id,
+          },
+          transaction,
+        });
 
-    if (existingTeamLeaderByClan) {
-      return res.status(409).json({
-        message: `There is already a Team Leader assigned to the ${clan} clan`,
-      });
-    }
+        if (existingTeamLeaderByClan) {
+          throw new Error('CLAN_ALREADY_ASSIGNED');
+        }
 
-    let roomRecord = await Room.findOne({
-      where: {
-        name: room,
-      },
-    });
+        // Check if room already exists
+        const existingRoom = await Room.findOne({
+          where: {
+            name: room,
+          },
+          transaction,
+        });
 
-    if (roomRecord) {
-      return res.status(409).json({
-        message: `Room ${room} already exists`,
-      });
-    }
+        if (existingRoom) {
+          throw new Error('ROOM_EXISTS');
+        }
 
-    roomRecord = await Room.create({
-      name: room,
-      capacity: Number(capacity),
-    });
+        // Create Room
+        const roomRecord = await Room.create(
+          {
+            name: room,
+            capacity: Number(capacity),
+          },
+          {
+            transaction,
+          }
+        );
 
-    const passwordHash = await bcrypt.hash(password, 10);
+        // Hash password
+        const passwordHash = await bcrypt.hash(password, 10);
 
-    const teamLeader = await TeamLeader.create({
-      name,
-      surname,
-      numer_telefonu,
-      email,
-      password: passwordHash,
-      roleId: roleRecord.id,
-      clanId: clanRecord.id,
-      routeRiwiId: routeRecord.id,
-      roomId: roomRecord.id,
-    });
+        // Create Team Leader
+        const teamLeader = await TeamLeader.create(
+          {
+            name,
+            surname,
+            numer_telefonu,
+            email,
+            password: passwordHash,
+            roleId: roleRecord.id,
+            clanId: clanRecord.id,
+            routeRiwiId: routeRecord.id,
+            roomId: roomRecord.id,
+          },
+          {
+            transaction,
+          }
+        );
 
-    const teamLeaderResponse = await TeamLeader.findByPk(teamLeader.id, {
-      attributes: {
-        exclude: ['password'],
-      },
-      include: [
-        {
-          model: Role,
-          attributes: ['id', 'name'],
-        },
-        {
-          model: Clan,
-          attributes: ['id', 'name'],
-        },
-        {
-          model: RouteRiwi,
-          as: 'routeRiwi',
-          attributes: ['id', 'name'],
-        },
-        {
-          model: Room,
-          as: 'room',
-          attributes: ['id', 'name', 'capacity'],
-        },
-      ],
-    });
+        // Get created Team Leader
+        const teamLeaderResponse = await TeamLeader.findByPk(teamLeader.id, {
+          attributes: {
+            exclude: ['password'],
+          },
+          include: [
+            {
+              model: Role,
+              attributes: ['id', 'name'],
+            },
+            {
+              model: Clan,
+              attributes: ['id', 'name'],
+            },
+            {
+              model: RouteRiwi,
+              as: 'routeRiwi',
+              attributes: ['id', 'name'],
+            },
+            {
+              model: Room,
+              as: 'room',
+              attributes: ['id', 'name', 'capacity'],
+            },
+          ],
+          transaction,
+        });
+
+        return teamLeaderResponse;
+      }
+    );
 
     return res.status(201).json({
       msg: 'Team Leader created successfully',
@@ -178,6 +208,32 @@ export const registerTeamLeader = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error creating Team Leader:', error);
+
+    if (error instanceof Error) {
+      if (error.message === 'TEAM_LEADER_EMAIL_EXISTS') {
+        return res.status(409).json({
+          message: 'A Team Leader with this email already exists',
+        });
+      }
+
+      if (error.message === 'ROUTE_ALREADY_ASSIGNED') {
+        return res.status(409).json({
+          message: `There is already a Team Leader assigned to the ${req.body.routeRiwi} route`,
+        });
+      }
+
+      if (error.message === 'CLAN_ALREADY_ASSIGNED') {
+        return res.status(409).json({
+          message: `There is already a Team Leader assigned to the ${req.body.clan} clan`,
+        });
+      }
+
+      if (error.message === 'ROOM_EXISTS') {
+        return res.status(409).json({
+          message: `Room ${req.body.room} already exists`,
+        });
+      }
+    }
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -248,14 +304,6 @@ export const updateTeamLeader = async (
   try {
     const { id } = req.params;
 
-    const teamLeader = await TeamLeader.findByPk(id);
-
-    if (!teamLeader) {
-      return res.status(404).json({
-        message: "TeamLeader doesn't exist",
-      });
-    }
-
     const {
       name,
       surname,
@@ -269,159 +317,215 @@ export const updateTeamLeader = async (
       capacity,
     } = req.body;
 
-    const newRouteRiwiId = routeRiwiId || teamLeader.routeRiwiId;
-    const newClanId = clanId || teamLeader.clanId;
-
-    const existingTeamLeaderByRoute = await TeamLeader.findOne({
-      where: {
-        routeRiwiId: newRouteRiwiId,
-      },
-    });
-
-    if (existingTeamLeaderByRoute && existingTeamLeaderByRoute.id !== id) {
-      return res.status(409).json({
-        message: 'There is already a Team Leader assigned to this route',
-      });
-    }
-
-    const existingTeamLeaderByClan = await TeamLeader.findOne({
-      where: {
-        clanId: newClanId,
-      },
-    });
-
-    if (existingTeamLeaderByClan && existingTeamLeaderByClan.id !== id) {
-      return res.status(409).json({
-        message: 'There is already a Team Leader assigned to this clan',
-      });
-    }
-
-    if (email) {
-      const existingTeamLeaderByEmail = await TeamLeader.findOne({
-        where: {
-          email,
-        },
-      });
-
-      if (existingTeamLeaderByEmail && existingTeamLeaderByEmail.id !== id) {
-        return res.status(409).json({
-          message: 'A Team Leader with this email already exists',
+    const updatedTeamLeader = await sequelize.transaction(
+      async (transaction) => {
+        const teamLeader = await TeamLeader.findByPk(id, {
+          transaction,
         });
-      }
-    }
 
-    let newRoomId = teamLeader.roomId;
-
-    if (roomId) {
-      const roomRecord = await Room.findByPk(roomId);
-
-      if (!roomRecord) {
-        return res.status(404).json({
-          message: 'Room not found',
-        });
-      }
-
-      newRoomId = roomRecord.id;
-
-      if (capacity !== undefined) {
-        await roomRecord.update({
-          capacity: Number(capacity),
-        });
-      }
-    } else if (roomName) {
-      let roomRecord = await Room.findOne({
-        where: {
-          name: roomName,
-        },
-      });
-
-      if (!roomRecord) {
-        if (capacity === undefined) {
-          return res.status(400).json({
-            message: 'Capacity is required when creating a new room',
-          });
+        if (!teamLeader) {
+          throw new Error('TEAM_LEADER_NOT_FOUND');
         }
 
-        roomRecord = await Room.create({
-          name: roomName,
-          capacity: Number(capacity),
+        const newRouteRiwiId = routeRiwiId || teamLeader.routeRiwiId;
+
+        const newClanId = clanId || teamLeader.clanId;
+
+        const existingTeamLeaderByRoute = await TeamLeader.findOne({
+          where: {
+            routeRiwiId: newRouteRiwiId,
+          },
+          transaction,
         });
-      } else if (capacity !== undefined) {
-        await roomRecord.update({
-          capacity: Number(capacity),
+
+        if (existingTeamLeaderByRoute && existingTeamLeaderByRoute.id !== id) {
+          throw new Error('ROUTE_ALREADY_ASSIGNED');
+        }
+
+        const existingTeamLeaderByClan = await TeamLeader.findOne({
+          where: {
+            clanId: newClanId,
+          },
+          transaction,
         });
+
+        if (existingTeamLeaderByClan && existingTeamLeaderByClan.id !== id) {
+          throw new Error('CLAN_ALREADY_ASSIGNED');
+        }
+
+        if (email) {
+          const existingTeamLeaderByEmail = await TeamLeader.findOne({
+            where: {
+              email,
+            },
+            transaction,
+          });
+
+          if (
+            existingTeamLeaderByEmail &&
+            existingTeamLeaderByEmail.id !== id
+          ) {
+            throw new Error('TEAM_LEADER_EMAIL_EXISTS');
+          }
+        }
+
+        let newRoomId = teamLeader.roomId;
+
+        if (roomId) {
+          const roomRecord = await Room.findByPk(roomId, {
+            transaction,
+          });
+
+          if (!roomRecord) {
+            throw new Error('ROOM_NOT_FOUND');
+          }
+
+          newRoomId = roomRecord.id;
+
+          if (capacity !== undefined) {
+            if (Number(capacity) <= 0) {
+              throw new Error('INVALID_CAPACITY');
+            }
+
+            await roomRecord.update(
+              {
+                capacity: Number(capacity),
+              },
+              {
+                transaction,
+              }
+            );
+          }
+        } else if (roomName) {
+          let roomRecord = await Room.findOne({
+            where: {
+              name: roomName,
+            },
+            transaction,
+          });
+
+          // Create new room
+          if (!roomRecord) {
+            if (capacity === undefined) {
+              throw new Error('CAPACITY_REQUIRED');
+            }
+
+            if (Number(capacity) <= 0) {
+              throw new Error('INVALID_CAPACITY');
+            }
+
+            roomRecord = await Room.create(
+              {
+                name: roomName,
+                capacity: Number(capacity),
+              },
+              {
+                transaction,
+              }
+            );
+          } else if (capacity !== undefined) {
+            if (Number(capacity) <= 0) {
+              throw new Error('INVALID_CAPACITY');
+            }
+
+            await roomRecord.update(
+              {
+                capacity: Number(capacity),
+              },
+              {
+                transaction,
+              }
+            );
+          }
+
+          newRoomId = roomRecord.id;
+        } else if (capacity !== undefined) {
+          if (Number(capacity) <= 0) {
+            throw new Error('INVALID_CAPACITY');
+          }
+
+          const roomRecord = await Room.findByPk(teamLeader.roomId, {
+            transaction,
+          });
+
+          if (roomRecord) {
+            await roomRecord.update(
+              {
+                capacity: Number(capacity),
+              },
+              {
+                transaction,
+              }
+            );
+          }
+        }
+
+        const updateData: Record<string, unknown> = {
+          roomId: newRoomId,
+        };
+
+        if (name !== undefined) {
+          updateData.name = name;
+        }
+
+        if (surname !== undefined) {
+          updateData.surname = surname;
+        }
+
+        if (numer_telefonu !== undefined) {
+          updateData.numer_telefonu = numer_telefonu;
+        }
+
+        if (email !== undefined) {
+          updateData.email = email;
+        }
+
+        if (roleId !== undefined) {
+          updateData.roleId = roleId;
+        }
+
+        if (routeRiwiId !== undefined) {
+          updateData.routeRiwiId = routeRiwiId;
+        }
+
+        if (clanId !== undefined) {
+          updateData.clanId = clanId;
+        }
+
+        await teamLeader.update(updateData, {
+          transaction,
+        });
+
+        const result = await TeamLeader.findByPk(id, {
+          attributes: {
+            exclude: ['password'],
+          },
+          include: [
+            {
+              model: Role,
+              attributes: ['id', 'name'],
+            },
+            {
+              model: Clan,
+              attributes: ['id', 'name'],
+            },
+            {
+              model: RouteRiwi,
+              as: 'routeRiwi',
+              attributes: ['id', 'name'],
+            },
+            {
+              model: Room,
+              as: 'room',
+              attributes: ['id', 'name', 'capacity'],
+            },
+          ],
+          transaction,
+        });
+
+        return result;
       }
-
-      newRoomId = roomRecord.id;
-    } else if (capacity !== undefined) {
-      const roomRecord = await Room.findByPk(teamLeader.roomId);
-
-      if (roomRecord) {
-        await roomRecord.update({
-          capacity: Number(capacity),
-        });
-      }
-    }
-
-    const updateData: Record<string, unknown> = {
-      roomId: newRoomId,
-    };
-
-    if (name !== undefined) {
-      updateData.name = name;
-    }
-
-    if (surname !== undefined) {
-      updateData.surname = surname;
-    }
-
-    if (numer_telefonu !== undefined) {
-      updateData.numer_telefonu = numer_telefonu;
-    }
-
-    if (email !== undefined) {
-      updateData.email = email;
-    }
-
-    if (roleId !== undefined) {
-      updateData.roleId = roleId;
-    }
-
-    if (routeRiwiId !== undefined) {
-      updateData.routeRiwiId = routeRiwiId;
-    }
-
-    if (clanId !== undefined) {
-      updateData.clanId = clanId;
-    }
-
-    await teamLeader.update(updateData);
-
-    const updatedTeamLeader = await TeamLeader.findByPk(id, {
-      attributes: {
-        exclude: ['password'],
-      },
-      include: [
-        {
-          model: Role,
-          attributes: ['id', 'name'],
-        },
-        {
-          model: Clan,
-          attributes: ['id', 'name'],
-        },
-        {
-          model: RouteRiwi,
-          as: 'routeRiwi',
-          attributes: ['id', 'name'],
-        },
-        {
-          model: Room,
-          as: 'room',
-          attributes: ['id', 'name', 'capacity'],
-        },
-      ],
-    });
+    );
 
     return res.status(200).json({
       msg: 'TeamLeader updated successfully',
@@ -429,6 +533,50 @@ export const updateTeamLeader = async (
     });
   } catch (error) {
     console.error('Error updating TeamLeader:', error);
+
+    if (error instanceof Error) {
+      if (error.message === 'TEAM_LEADER_NOT_FOUND') {
+        return res.status(404).json({
+          message: "TeamLeader doesn't exist",
+        });
+      }
+
+      if (error.message === 'ROUTE_ALREADY_ASSIGNED') {
+        return res.status(409).json({
+          message: 'There is already a Team Leader assigned to this route',
+        });
+      }
+
+      if (error.message === 'CLAN_ALREADY_ASSIGNED') {
+        return res.status(409).json({
+          message: 'There is already a Team Leader assigned to this clan',
+        });
+      }
+
+      if (error.message === 'TEAM_LEADER_EMAIL_EXISTS') {
+        return res.status(409).json({
+          message: 'A Team Leader with this email already exists',
+        });
+      }
+
+      if (error.message === 'ROOM_NOT_FOUND') {
+        return res.status(404).json({
+          message: 'Room not found',
+        });
+      }
+
+      if (error.message === 'CAPACITY_REQUIRED') {
+        return res.status(400).json({
+          message: 'Capacity is required when creating a new room',
+        });
+      }
+
+      if (error.message === 'INVALID_CAPACITY') {
+        return res.status(400).json({
+          message: 'Capacity must be greater than 0',
+        });
+      }
+    }
 
     return res.status(500).json({
       message: 'Internal server error',
@@ -443,21 +591,31 @@ export const deleteTeamLeader = async (
   try {
     const { id } = req.params;
 
-    const teamLeader = await TeamLeader.findByPk(id);
-
-    if (!teamLeader) {
-      return res.status(404).json({
-        message: "TeamLeader doesn't exist",
+    await sequelize.transaction(async (transaction) => {
+      const teamLeader = await TeamLeader.findByPk(id, {
+        transaction,
       });
-    }
 
-    await teamLeader.destroy();
+      if (!teamLeader) {
+        throw new Error('TEAM_LEADER_NOT_FOUND');
+      }
+
+      await teamLeader.destroy({
+        transaction,
+      });
+    });
 
     return res.status(200).json({
       message: 'TeamLeader deleted successfully',
     });
   } catch (error) {
     console.error('Error deleting TeamLeader:', error);
+
+    if (error instanceof Error && error.message === 'TEAM_LEADER_NOT_FOUND') {
+      return res.status(404).json({
+        message: "TeamLeader doesn't exist",
+      });
+    }
 
     return res.status(500).json({
       message: 'Internal server error',
