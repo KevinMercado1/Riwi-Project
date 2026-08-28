@@ -7,14 +7,13 @@ import {
   deleteCoder,
 } from '../controllers/coderController.js';
 
-import {
-  authMiddleware,
-  type AuthRequest,
-} from '../middlewares/authMiddleware.js';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
+import { validateRequest } from '../middlewares/validateRequests.js';
+import { createCodeSchema } from '../dto/create-coderschema.js';
 
 const router = express.Router();
 
-router.post('/', registerCoder);
+router.post('/register', validateRequest(createCodeSchema), registerCoder);
 
 router.get('/', authMiddleware, getCoders);
 

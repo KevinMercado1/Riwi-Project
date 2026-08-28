@@ -16,7 +16,7 @@ Identification.init(
     },
 
     type: {
-      type: DataTypes.ENUM('nationa_lID', 'foreigner_id ', 'passport'),
+      type: DataTypes.ENUM('national_ID', 'foreigner_id ', 'passport'),
       allowNull: false,
     },
 
@@ -30,7 +30,7 @@ Identification.init(
     sequelize: db,
     modelName: 'Identification',
     tableName: 'identifications',
-  }
+  },
 );
 
 export default Identification;

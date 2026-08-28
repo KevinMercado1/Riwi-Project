@@ -3,7 +3,7 @@ import db from '../config/db.js';
 
 class RouteRiwi extends Model {
   declare id: string;
-  declare name: 'basic' | 'advanced';
+  declare name: string;
 }
 
 RouteRiwi.init(
@@ -15,7 +15,7 @@ RouteRiwi.init(
     },
 
     name: {
-      type: DataTypes.ENUM('basic', 'advanced'),
+      type: DataTypes.STRING,
       allowNull: false,
     },
   },
@@ -23,7 +23,7 @@ RouteRiwi.init(
     sequelize: db,
     modelName: 'RouteRiwi',
     tableName: 'routes_riwi',
-  }
+  },
 );
 
 export default RouteRiwi;

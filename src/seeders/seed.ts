@@ -127,7 +127,7 @@ const seed = async (): Promise<void> => {
         number: '1001001001',
       },
       defaults: {
-        type: 'nationa_lID',
+        type: 'national_ID',
         number: '1001001001',
       },
     });
@@ -137,7 +137,7 @@ const seed = async (): Promise<void> => {
         number: '1001001002',
       },
       defaults: {
-        type: 'nationa_lID',
+        type: 'national_ID',
         number: '1001001002',
       },
     });
@@ -147,7 +147,7 @@ const seed = async (): Promise<void> => {
         number: '1001001003',
       },
       defaults: {
-        type: 'nationa_lID',
+        type: 'national_ID',
         number: '1001001003',
       },
     });
@@ -157,7 +157,7 @@ const seed = async (): Promise<void> => {
         number: '1001001004',
       },
       defaults: {
-        type: 'nationa_lID',
+        type: 'national_ID',
         number: '1001001004',
       },
     });

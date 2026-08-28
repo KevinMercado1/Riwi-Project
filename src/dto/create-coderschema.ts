@@ -21,7 +21,7 @@ export const createCodeSchema = z.object({
     .string({ message: 'password must be a string' })
     .min(8, 'password must have at least 8 characters'),
 
-  identificationType: z.enum(['nationa_lID', 'foreigner_id', 'passport']),
+  identificationType: z.enum(['national_ID', 'foreigner_id', 'passport']),
 
   identificationNumber: z.string().min(1),
 
@@ -29,11 +29,11 @@ export const createCodeSchema = z.object({
 
   cityName: z.string().min(2),
 
-  role: z.enum(['coder', 'team_leader', 'admin']),
+  role: z.literal('coder'),
 
   clan: z.string().min(2),
 
-  routeRiwi: z.enum(['basic', 'advanced']),
+  routeRiwi: z.string().min(1, 'routeRiwi is required'),
 
   roomName: z.string().min(2),
 });
